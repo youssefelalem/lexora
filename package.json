@@ -1,0 +1,13 @@
+{
+  "name": "lexora",
+  "version": "1.0.0",
+  "description": "Frontend for the Lexora project",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo \"Add your build script here\""
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
