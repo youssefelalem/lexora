@@ -1,47 +1,97 @@
 # Lexora Project
 
-## Prerequisites
+هذا المشروع عبارة عن تطبيق ويب كامل يتكون من جزئين:
+- Backend: مكتوب بلغة Java باستخدام Spring Boot
+- Frontend: مكتوب باستخدام React.js
 
-*   Java Development Kit (JDK) version 17 or later installed. You can check your version with `java -version`.
-*   Node.js and npm (The `frontend-maven-plugin` can install these automatically during the build, but for separate frontend development, you might want them installed globally).
+## هيكل المشروع
 
-## How to Run The Combined Application (Backend + Built Frontend)
+```
+lexora/
+├── frontend/                 # الجزء الأمامي (React)
+│   ├── src/
+│   │   ├── components/      # مكونات React
+│   │   │   ├── common/     # المكونات المشتركة
+│   │   │   ├── pages/      # صفحات التطبيق
+│   │   │   └── features/   # مكونات الميزات
+│   │   ├── App.js          # الملف الرئيسي للتطبيق
+│   │   └── App.css         # الأنماط العامة
+│   └── package.json        # تبعيات المشروع
+│
+└── src/                     # الجزء الخلفي (Spring Boot)
+    ├── main/
+    │   ├── java/          # الكود المصدري
+    │   └── resources/     # ملفات الموارد
+    └── pom.xml            # إدارة التبعيات
+```
 
-This command builds both the backend and the frontend (using `npm run build`) and runs the Spring Boot application, which typically serves the built frontend assets.
+## متطلبات التشغيل
 
-1.  Make sure you are in the main project directory (`c:\Users\youssef elalem\Desktop\lexora`).
-2.  Open a terminal or command prompt in this directory.
-3.  Run the application using the Maven wrapper:
+### Backend:
+- Java JDK 11 أو أحدث
+- Maven
+- Spring Boot
 
-    *   On Windows:
-        ```bash
-        mvnw.cmd spring-boot:run
-        ```
-    *   On Linux/macOS:
-        ```bash
-        ./mvnw spring-boot:run
-        ```
-    *(Note: The first time you run this, Maven might download dependencies and Node/npm, which can take a few minutes).*
+### Frontend:
+- Node.js (الإصدار 14 أو أحدث)
+- npm
 
-4.  The application should start, and you can typically access it at `http://localhost:8080` (or another port if configured differently in `application.properties`).
+## كيفية تشغيل المشروع
 
-## Frontend Development (Running Separately)
+### 1. تشغيل Backend
+```bash
+# الانتقال إلى المجلد الرئيسي
+cd lexora
 
-To run the frontend with a development server (for features like hot-reloading) while developing, you typically run it separately from the backend.
+# تشغيل Backend
+mvn spring-boot:run
+```
+سيتم تشغيل الخادم على المنفذ 8080
 
-**Note:** Your current `package.json` does not have a standard `start` script. You might need to add one depending on the frontend framework/tools you are using (e.g., for React, Vue, Angular).
+### 2. تشغيل Frontend
+```bash
+# الانتقال إلى مجلد Frontend
+cd frontend
 
-1.  **Start the Backend:** Open a terminal and run the backend as described in the section above:
-    *   Windows: `mvnw.cmd spring-boot:run`
-    *   Linux/macOS: `./mvnw spring-boot:run`
-2.  **Start the Frontend:** Open a *second* terminal in the project root (`c:\Users\youssef elalem\Desktop\lexora\frontend`).
-    *   Install frontend dependencies (if not already done):
-        ```bash
-        npm install
-        ```
-    *   Run the frontend development server (assuming you add a `start` script to `package.json`):
-        ```bash
-        npm start
-        ```
-    *   The frontend development server will likely run on a different port (e.g., `http://localhost:3000`). You will also need to configure proxying for API requests to the backend running on port 8080 (this setup depends on your frontend framework).
+# تثبيت التبعيات
+npm install
 
+# تشغيل التطبيق
+npm start
+```
+سيتم تشغيل التطبيق على المنفذ 3000
+
+## ربط Frontend مع Backend
+
+1. تأكد من أن Backend يعمل على المنفذ 8080
+2. تأكد من أن Frontend يعمل على المنفذ 3000
+3. في ملف `frontend/src/App.js`، يتم استخدام `BrowserRouter` للتعامل مع المسارات
+4. يمكنك إضافة طلبات API في Frontend باستخدام axios:
+
+```javascript
+import axios from 'axios';
+
+// مثال على طلب API
+axios.get('http://localhost:8080/api/endpoint')
+  .then(response => {
+    // معالجة الاستجابة
+  })
+  .catch(error => {
+    // معالجة الخطأ
+  });
+```
+
+## نصائح مهمة
+
+1. تأكد من تشغيل Backend قبل Frontend
+2. إذا كنت تستخدم CORS، تأكد من تكوينه بشكل صحيح في Backend
+3. يمكنك تغيير منفذ Backend في ملف `application.properties`
+4. يمكنك تغيير منفذ Frontend في ملف `package.json`
+
+## المساعدة والدعم
+
+إذا واجهتك أي مشاكل:
+1. تأكد من تثبيت جميع المتطلبات
+2. تحقق من المنافذ المستخدمة
+3. تأكد من أن جميع التبعيات مثبتة بشكل صحيح
+4. تحقق من سجلات الخطأ في وحدة التحكم
