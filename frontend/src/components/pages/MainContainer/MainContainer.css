@@ -1,0 +1,6 @@
+.main-container {
+  margin-right: 250px; /* نفس عرض الـ sidebar */
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #f5f6fa;
+} 
