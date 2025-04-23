@@ -33,46 +33,55 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+			<!-- Fournit les fonctionnalités de base pour construire des applications web, y compris les API RESTful, Spring MVC et un serveur Tomcat intégré -->
 		</dependency>
 		<dependency> <!-- Add Spring Security Starter -->
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
+			<!-- Ajoute les fonctionnalités de Spring Security pour gérer l'authentification et le contrôle d'accès -->
 		</dependency>
 		<dependency> <!-- Add Spring Data JPA for database interaction -->
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<!-- Fournit le support pour Java Persistence API (JPA) pour interagir avec les bases de données, incluant Hibernate par défaut -->
 		</dependency>
 		<dependency> <!-- Add MySQL Connector -->
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<version>9.1.0</version>
+			<!-- Pilote JDBC nécessaire pour se connecter aux bases de données MySQL -->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<!-- Fournit les outils et bibliothèques nécessaires pour tester les applications Spring Boot (par exemple, JUnit, Mockito) -->
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+			<!-- Bibliothèque qui aide à réduire le code répétitif (par exemple, getters/setters/constructeurs) en utilisant des annotations -->
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
 			<version>0.11.5</version>
+			<!-- L'interface de programmation (API) pour la bibliothèque Java JWT pour manipuler les tokens JWT -->
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-impl</artifactId>
 			<version>0.11.5</version>
 			<scope>runtime</scope>
+			<!-- L'implémentation réelle de la bibliothèque Java JWT, requise à l'exécution -->
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.5</version>
 			<scope>runtime</scope>
+			<!-- Fournit l'intégration avec la bibliothèque Jackson pour le traitement JSON dans les tokens JWT, requise à l'exécution -->
 		</dependency>
 	</dependencies>
 
