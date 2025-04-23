@@ -1,9 +1,11 @@
 package com.version0.lexora.controller;
 
-import com.version0.lexora.model.User;
+import com.version0.lexora.model.Utilisateur; // استيراد نموذج المستخدم المعاد تسميته // Importation du modèle utilisateur renommé
 import com.version0.lexora.service.AuthService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.persistence.EntityNotFoundException; // <-- تغيير هنا
 import java.util.Map;
 
 /**
@@ -32,12 +34,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> registrationData) {
         try {
-            User user = authService.register(
+            Utilisateur utilisateur = authService.register(
                 registrationData.get("email"),
                 registrationData.get("password"),
                 registrationData.get("name")
             );
-            return ResponseEntity.ok(user);
+            return ResponseEntity.ok(utilisateur);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -72,9 +74,30 @@ public class AuthController {
             if (token != null && token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
-            return ResponseEntity.ok(authService.validateToken(token));
+            Utilisateur utilisateur = authService.validateToken(token);
+            return ResponseEntity.ok(utilisateur);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
-} 
+
+    /**
+     * نقطة نهاية لتحديث حالة المستخدم
+     * @param id معرف المستخدم
+     * @param active الحالة الجديدة للمستخدم
+     * @return ResponseEntity يحتوي على بيانات المستخدم المحدث أو رسالة خطأ
+     */
+    @PutMapping("/users/{id}/status") // أو @PatchMapping // Or @PatchMapping
+    // @PreAuthorize("hasRole('ADMIN')") // قم بتأمين هذه النقطة إذا لزم الأمر // Secure this endpoint if needed
+    public ResponseEntity<?> updateUserStatus(@PathVariable Long id, @RequestParam boolean active) {
+        try {
+            Utilisateur updatedUser = authService.updateUserActiveStatus(id, active);
+            return ResponseEntity.ok(updatedUser); // إرجاع المستخدم المحدث // Return the updated user
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // إرجاع خطأ 404 إذا لم يتم العثور عليه // Return 404 if not found
+        } catch (Exception e) {
+            // معالجة الأخطاء الأخرى // Handle other potential errors
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la mise à jour du statut de l'utilisateur.");
+        }
+    }
+}

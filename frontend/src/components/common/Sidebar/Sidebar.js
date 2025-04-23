@@ -16,7 +16,7 @@ const Sidebar = () => {
     <div className="sidebar">
       <div className="sidebar-header">
         <h2>القائمة</h2>
-        {user && <p>مرحباً، {user.name}</p>}
+        {user && <p>مرحباً، {user.nom}</p>}
       </div>
       <nav className="sidebar-nav">
         <ul>
@@ -40,4 +40,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar; 
+export default Sidebar;
