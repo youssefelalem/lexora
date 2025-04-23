@@ -1,7 +1,9 @@
 package com.version0.lexora.config;
 
+import com.version0.lexora.model.Role; // استيراد الـ Enum Role
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+// import org.springframework.http.HttpMethod; // قم بإلغاء التعليق إذا كنت بحاجة لتحديد طرق HTTP
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,6 +21,7 @@ import java.util.Arrays;
  */
 @Configuration
 @EnableWebSecurity
+// يمكنك إضافة @EnableMethodSecurity هنا إذا أردت استخدام @PreAuthorize في المستقبل
 public class SecurityConfig {
 
     /**
@@ -33,8 +36,14 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // تكوين CORS
             .csrf(AbstractHttpConfigurer::disable) // تعطيل CSRF للواجهات البرمجية
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // السماح بالوصول إلى نقاط نهاية المصادقة
-                .anyRequest().authenticated() // تتطلب المصادقة لباقي الطلبات
+                .requestMatchers("/api/auth/**").permitAll() // السماح بالوصول العام لنقاط نهاية المصادقة
+                // --- إضافة قواعد التحكم في الوصول بناءً على الأدوار ---
+                // مثال: نقاط النهاية الخاصة بالمسؤول فقط
+                .requestMatchers("/api/admin/**").hasRole(Role.ADMINISTRATEUR.name())
+                // مثال: نقاط النهاية التي يمكن للمساعد والمسؤول الوصول إليها
+                .requestMatchers("/api/data/**").hasAnyRole(Role.ASSISTANT_ADMIN.name(), Role.ADMINISTRATEUR.name())
+                // ----------------------------------------------------
+                .anyRequest().authenticated() // أي طلب آخر يتطلب تسجيل الدخول (أي دور)
             );
             // .httpBasic(Customizer.withDefaults()); // Example: Enable HTTP Basic Auth
             // Or configure JWT filter here later

@@ -2,6 +2,8 @@ package com.version0.lexora.service;
 
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+// Add import for DisabledException
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.User.UserBuilder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,16 +31,22 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Utilisateur utilisateur = userOptional.orElseThrow(() ->
                 new UsernameNotFoundException("User not found with email: " + email)); // رسالة خطأ واضحة // Message d'erreur clair
 
+        // Vérifier si le compte est actif
+        // Check if the account is active
+        if (!utilisateur.getEstActive()) {
+            // Lancer une exception si le compte n'est pas actif
+            // Throw an exception if the account is not active
+            throw new DisabledException("User account is disabled");
+        }
+
         // بناء كائن UserDetails الذي يستخدمه Spring Security // Construction de l'objet UserDetails utilisé par Spring Security
         UserBuilder builder = org.springframework.security.core.userdetails.User.withUsername(email); // بدء بناء المستخدم بالبريد الإلكتروني // Commencer la construction de l'utilisateur avec l'email
         // تعيين كلمة المرور المشفرة من كائن المستخدم // Définir le mot de passe haché à partir de l'objet utilisateur
         // استخدام getter الصحيح لتجزئة كلمة المرور // Utilisation du getter correct pour le hash du mot de passe
         builder.password(utilisateur.getMotDePasseHash()); // Changed method call
-        // تعيين الأدوار/الصلاحيات. للتبسيط، يتم تعيين دور 'USER' للجميع. // Attribuer les rôles/autorités. Pour simplifier, attribuer le rôle 'USER' à tout le monde.
-        // في تطبيق حقيقي، قد تخزن الأدوار في كيان المستخدم. // Dans une application réelle, vous pourriez stocker les rôles dans l'entité Utilisateur.
-        // ضع في اعتبارك إضافة إدارة الأدوار بناءً على نوع المستخدم (Secretaire، Avocat) لاحقًا // Envisager d'ajouter une gestion des rôles basée sur le type d'Utilisateur (Secretaire, Avocat) plus tard
-        builder.roles("USER"); // تعيين دور افتراضي // Attribution d'un rôle par défaut
-        // يمكنك إضافة المزيد من الصلاحيات باستخدام .authorities(...) // Vous pouvez ajouter plus d'autorités en utilisant .authorities(...)
+        // Utiliser le rôle stocké dans l'entité Utilisateur
+        // Use the role stored in the Utilisateur entity
+        builder.roles(utilisateur.getRole().name()); // Assigner le rôle réel de l'utilisateur
 
         return builder.build(); // إرجاع كائن UserDetails المبني // Retourner l'objet UserDetails construit
     }

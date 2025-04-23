@@ -83,6 +83,12 @@ public class AuthService {
             throw new RuntimeException("البريد الإلكتروني أو كلمة المرور غير صحيحة"); // Email ou mot de passe incorrect
         }
 
+        // إذا كان المستخدم غير نشط، قم بتنشيطه وحفظ التغيير // If the user is inactive, activate and save the change
+        if (!utilisateur.getEstActive()) {
+            utilisateur.setEstActive(true);
+            userRepository.save(utilisateur); // حفظ التغيير
+        }
+
         // إنشاء رمز JWT للمستخدم المصادق عليه // Générer un token JWT pour l'utilisateur authentifié
         String token = generateToken(utilisateur);
 

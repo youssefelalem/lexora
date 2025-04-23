@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 
 @Entity // Indique que cette classe est une entité JPA, ce qui signifie qu'elle sera mappée à une table dans la base de données.
 @Table(name = "utilisateurs") // Spécifie le nom de la table dans la base de données pour cette entité.
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE) // Définit la stratégie d'héritage. SINGLE_TABLE signifie que toutes les classes de la hiérarchie seront stockées dans une seule table.
-@DiscriminatorColumn(name="type_utilisateur", discriminatorType = DiscriminatorType.STRING) // Spécifie la colonne utilisée pour différencier les sous-classes dans la stratégie SINGLE_TABLE.
 public class Utilisateur {
 
     @Id // Marque ce champ comme la clé primaire de la table.
@@ -19,19 +17,25 @@ public class Utilisateur {
     private String email;
 
     @Column(nullable = false)
-    private String motDePasseHash; // Renamed from password
+    private String motDePasseHash;
 
     @Column(nullable = false)
-    private Boolean estActive = false; // Default to active
+    private Boolean estActive = true; // Default to active (true)
+
+    @Enumerated(EnumType.STRING) // Indique à JPA de stocker l'Enum sous forme de chaîne (ADMINISTRATEUR, ASSISTANT_ADMIN)
+    @Column(nullable = false) // Le rôle ne peut pas être nul
+    private Role role; // Nouveau champ pour le rôle de l'utilisateur
 
     // Constructors
     public Utilisateur() {}
 
-    public Utilisateur(String nom, String email, String motDePasseHash) {
+    // Constructeur mis à jour pour inclure le rôle
+    public Utilisateur(String nom, String email, String motDePasseHash, Role role) {
         this.nom = nom;
         this.email = email;
         this.motDePasseHash = motDePasseHash;
-        this.estActive = true;
+        this.role = role; // Initialiser le rôle
+        this.estActive = true; // Par défaut, l'utilisateur est actif
     }
 
     // Getters and Setters
@@ -75,79 +79,12 @@ public class Utilisateur {
         this.estActive = estActive;
     }
 
-    // Methods (Implementation depends on application logic)
-    public Boolean seConnecter() {
-        // Logic for login - typically handled by a service layer with security checks
-        System.out.println(this.nom + " is attempting to connect.");
-        // Return true/false based on authentication success
-        return true; // Placeholder
+    // Getter et Setter pour le nouveau champ role
+    public Role getRole() {
+        return role;
     }
 
-    public void seDeconnecter() {
-        // Logic for logout - typically handled by session management
-        System.out.println(this.nom + " is disconnecting.");
-        // Invalidate session, etc.
-    }
-
-    public void modifierProfil(/* Parameters for profile modification */) {
-        // Logic to update user profile information
-        System.out.println("Modifying profile for " + this.nom);
-        // Update fields and persist changes
-    }
-}
-
-// Subclass Secretaire
-@Entity // Bien que l'héritage soit SINGLE_TABLE, cette annotation est souvent conservée pour la clarté ou pour d'éventuelles configurations spécifiques à la sous-classe.
-@DiscriminatorValue("SECRETAIRE") // Définit la valeur qui sera stockée dans la colonne discriminante pour les instances de cette sous-classe.
-class Secretaire extends Utilisateur {
-    // Secretaire specific fields and methods can be added here
-    public Secretaire() {
-        super();
-    }
-
-    public Secretaire(String nom, String email, String motDePasseHash) {
-        super(nom, email, motDePasseHash);
-    }
-
-    // Example of overriding or adding specific behavior
-    @Override // Indique que cette méthode surcharge une méthode de la superclasse (Utilisateur).
-    public void modifierProfil() {
-        System.out.println("Modifying profile for Secretaire: " + getNom());
-        // Add specific logic for Secretaire profile modification
-    }
-}
-
-// Subclass Avocat
-@Entity // Même raison que pour Secretaire.
-@DiscriminatorValue("AVOCAT") // Définit la valeur discriminante pour les instances d'Avocat.
-class Avocat extends Utilisateur {
-    // Avocat specific fields and methods can be added here
-
-    public Avocat() {
-        super();
-    }
-
-    // Updated constructor without numeroBarreau
-    public Avocat(String nom, String email, String motDePasseHash) {
-        super(nom, email, motDePasseHash);
-    }
-
-    // Example of overriding or adding specific behavior
-    @Override // Indique que cette méthode surcharge une méthode de la superclasse.
-    public void modifierProfil() {
-        System.out.println("Modifying profile for Avocat: " + getNom());
-        // Add specific logic for Avocat profile modification
-    }
-
-    // New method to create a dossier
-    public void creerDossier(/* Parameters for dossier creation */) {
-        System.out.println("Avocat " + getNom() + " is creating a new dossier.");
-        // Add logic to create a dossier
-    }
-
-    // New method to generate a report
-    public void genererRapport(/* Parameters for report generation */) {
-        System.out.println("Avocat " + getNom() + " is generating a report.");
-        // Add logic to generate a report
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
