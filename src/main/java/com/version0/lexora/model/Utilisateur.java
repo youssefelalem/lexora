@@ -2,20 +2,20 @@ package com.version0.lexora.model;
 
 import jakarta.persistence.*;
 
-@Entity
-@Table(name = "utilisateurs")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE) // Strategy for handling inheritance
-@DiscriminatorColumn(name="type_utilisateur", discriminatorType = DiscriminatorType.STRING) // Column to differentiate subclasses
+@Entity // Indique que cette classe est une entité JPA, ce qui signifie qu'elle sera mappée à une table dans la base de données.
+@Table(name = "utilisateurs") // Spécifie le nom de la table dans la base de données pour cette entité.
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE) // Définit la stratégie d'héritage. SINGLE_TABLE signifie que toutes les classes de la hiérarchie seront stockées dans une seule table.
+@DiscriminatorColumn(name="type_utilisateur", discriminatorType = DiscriminatorType.STRING) // Spécifie la colonne utilisée pour différencier les sous-classes dans la stratégie SINGLE_TABLE.
 public class Utilisateur {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id // Marque ce champ comme la clé primaire de la table.
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Configure la manière dont la clé primaire est générée. IDENTITY signifie qu'elle est auto-incrémentée par la base de données.
     private Long idUtilisateur;
 
-    @Column(nullable = false)
+    @Column(nullable = false) // Mappe ce champ à une colonne de la table. nullable = false signifie que la colonne ne peut pas être nulle.
     private String nom;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false) // unique = true signifie que chaque valeur dans cette colonne doit être unique.
     private String email;
 
     @Column(nullable = false)
@@ -97,8 +97,8 @@ public class Utilisateur {
 }
 
 // Subclass Secretaire
-@Entity
-@DiscriminatorValue("SECRETAIRE")
+@Entity // Bien que l'héritage soit SINGLE_TABLE, cette annotation est souvent conservée pour la clarté ou pour d'éventuelles configurations spécifiques à la sous-classe.
+@DiscriminatorValue("SECRETAIRE") // Définit la valeur qui sera stockée dans la colonne discriminante pour les instances de cette sous-classe.
 class Secretaire extends Utilisateur {
     // Secretaire specific fields and methods can be added here
     public Secretaire() {
@@ -110,7 +110,7 @@ class Secretaire extends Utilisateur {
     }
 
     // Example of overriding or adding specific behavior
-    @Override
+    @Override // Indique que cette méthode surcharge une méthode de la superclasse (Utilisateur).
     public void modifierProfil() {
         System.out.println("Modifying profile for Secretaire: " + getNom());
         // Add specific logic for Secretaire profile modification
@@ -118,8 +118,8 @@ class Secretaire extends Utilisateur {
 }
 
 // Subclass Avocat
-@Entity
-@DiscriminatorValue("AVOCAT")
+@Entity // Même raison que pour Secretaire.
+@DiscriminatorValue("AVOCAT") // Définit la valeur discriminante pour les instances d'Avocat.
 class Avocat extends Utilisateur {
     // Avocat specific fields and methods can be added here
 
@@ -133,7 +133,7 @@ class Avocat extends Utilisateur {
     }
 
     // Example of overriding or adding specific behavior
-    @Override
+    @Override // Indique que cette méthode surcharge une méthode de la superclasse.
     public void modifierProfil() {
         System.out.println("Modifying profile for Avocat: " + getNom());
         // Add specific logic for Avocat profile modification
