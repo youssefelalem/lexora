@@ -1,6 +1,10 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
+// Define API base URL - use your computer's IP address that's accessible from your phone
+// توفير عنوان URL أساسي للAPI - استخدم عنوان IP للكمبيوتر الذي يمكن الوصول إليه من هاتفك
+const API_BASE_URL = "http://192.168.1.6:8080";
+
 // Crée un contexte d'authentification
 const AuthContext = createContext(null);
 
@@ -16,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       // Si un token existe, tente de récupérer les informations de l'utilisateur
-      axios.get('http://localhost:8080/api/auth/me', {
+      axios.get(`${API_BASE_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` } // Envoie le token dans l'en-tête Authorization
       })
       .then(response => {
@@ -42,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       // Envoie une requête POST à l'API de connexion avec l'email et le mot de passe
-      const response = await axios.post('http://localhost:8080/api/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         email,
         password
       });
@@ -57,8 +61,12 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       // Si une erreur se produit pendant la connexion
+      console.error("Login error:", error);
       // Le backend retourne maintenant l'erreur dans { message: "..." }
-      return { success: false, error: error.response?.data?.message || 'Une erreur s\'est produite lors de la connexion' };
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Une erreur s\'est produite lors de la connexion' 
+      };
     }
   };
 
@@ -70,12 +78,18 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Function to update user data in context after profile update
+  const updateUserInContext = (userData) => {
+    setUser(userData);
+  };
+
   // Crée l'objet de valeur à passer au contexte
   const value = {
     user,      // L'utilisateur connecté (ou null)
     loading,   // L'état de chargement initial
     login,     // La fonction de connexion
-    logout     // La fonction de déconnexion
+    logout,    // La fonction de déconnexion
+    updateUserInContext // Fonction pour mettre à jour les données utilisateur
   };
 
   // Retourne le fournisseur de contexte avec la valeur définie

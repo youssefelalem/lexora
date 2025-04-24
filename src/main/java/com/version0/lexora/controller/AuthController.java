@@ -14,7 +14,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3000") // السماح بالطلبات من الفرونت إند
+@CrossOrigin("*") // السماح بالطلبات من أي مصدر خلال التطوير // Allow requests from any source during development
 public class AuthController {
     private final AuthService authService;
 

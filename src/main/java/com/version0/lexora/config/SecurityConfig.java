@@ -58,10 +58,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // السماح بالطلبات من الفرونت إند
+        // Allow requests from any origin during development
+        // في مرحلة التطوير، نسمح بالطلبات من أي مصدر
+        // Pour le développement, nous autorisons les requêtes de toute origine
+        configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // الطرق المسموح بها
-        configuration.setAllowedHeaders(Arrays.asList("*")); // السماح بجميع الرؤوس
-        configuration.setAllowCredentials(true); // السماح باعتماد الطلبات
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept",
+                "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers")); // السماح بجميع الرؤوس
+        configuration.setAllowCredentials(false); // Must be false if allowedOrigins contains "*"
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

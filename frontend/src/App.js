@@ -11,23 +11,29 @@ const PrivateRoute = ({ children }) => {
   return user ? children : <Navigate to="/login" />;
 };
 
+function AppLayout() {
+  return (
+    <div className="flex flex-row min-h-screen bg-gray-50">
+      <Sidebar />
+      <div className="flex-grow transition-all duration-300 ease-in-out">
+        <MainContainer />
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="">
+        <div dir="rtl" className="min-h-screen"> {/* Setting RTL direction for Arabic language */}
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route
               path="/*"
               element={
                 <PrivateRoute>
-                  <div className="flex flex-row">
-                    <Sidebar />
-                    <div className="flex-grow ml-64">
-                      <MainContainer />
-                    </div>
-                  </div>
+                  <AppLayout />
                 </PrivateRoute>
               }
             />
