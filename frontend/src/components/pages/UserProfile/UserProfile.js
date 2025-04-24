@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../features/auth/AuthContext';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const UserProfile = () => {
   const { user, logout, updateUserInContext } = useAuth();
@@ -13,6 +14,7 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -180,6 +182,12 @@ const UserProfile = () => {
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 تعديل الملف الشخصي
+              </button>
+              <button 
+                onClick={() => navigate('/change-password')}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
+              >
+                تغيير كلمة المرور
               </button>
               <button 
                 onClick={logout}
