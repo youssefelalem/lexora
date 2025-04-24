@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import UserProfile from '../UserProfile/UserProfile';
 import ChangePassword from '../ChangePassword/ChangePassword';
 import Support from '../Support/Support';
+import AllClients from '../Clients/AllClients/AllClients';
 
 // تعريف ثوابت للفئات المشتركة لتقليل التكرار
 const ICON_BUTTON_CLASSES = "p-2 transition-colors duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500";
@@ -491,7 +492,7 @@ const MainContainer = () => {
           } />
           <Route path="/settings" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى الإعدادات</div>} />
           {/* مسارات العملاء */}
-          <Route path="/clients/all" element={<div className="p-4 bg-white rounded-lg shadow-sm">جميع العملاء</div>} />
+          <Route path="/clients/all" element={<AllClients />} />
           <Route path="/clients/types" element={<div className="p-4 bg-white rounded-lg shadow-sm">أنواع العملاء</div>} />
           {/* مسارات القضايا */}
           <Route path="/cases/new" element={<div className="p-4 bg-white rounded-lg shadow-sm">إضافة قضية جديدة</div>} />
