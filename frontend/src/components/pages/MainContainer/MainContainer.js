@@ -12,6 +12,7 @@ import AllSessions from '../Sessions/AllSessions/AllSessions';
 import AllDocuments from '../Documents/AllDocuments/AllDocuments';
 import AllFiles from '../Files/AllFiles/AllFiles';
 import AllInvoices from '../Invoices/AllInvoices/AllInvoices';
+import AllPayments from '../Payments/AllPayments/AllPayments';
 
 // تعريف ثوابت للفئات المشتركة لتقليل التكرار
 const ICON_BUTTON_CLASSES = "p-2 transition-colors duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500";
@@ -511,7 +512,7 @@ const MainContainer = () => {
           {/* مسارات جديدة تمت إضافتها */}
           <Route path="/documents" element={<AllDocuments />} />
           <Route path="/invoices" element={<AllInvoices />} />
-          <Route path="/payments" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى المدفوعات</div>} />
+          <Route path="/payments" element={<AllPayments />} />
           <Route path="/expenses" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى النفقات</div>} />
           <Route path="/notifications" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى الإشعارات</div>} />
           <Route path="/support" element={<Support />} />
