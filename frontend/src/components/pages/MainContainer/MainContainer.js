@@ -4,6 +4,14 @@ import UserProfile from '../UserProfile/UserProfile';
 import ChangePassword from '../ChangePassword/ChangePassword';
 import Support from '../Support/Support';
 import AllClients from '../Clients/AllClients/AllClients';
+import ClientTypes from '../Clients/ClientTypes/ClientTypes';
+import AllCases from '../Cases/AllCases/AllCases';
+import CaseTypes from '../Cases/CaseTypes/CaseTypes';
+import NewCase from '../Cases/NewCase/NewCase';
+import AllSessions from '../Sessions/AllSessions/AllSessions';
+import AllDocuments from '../Documents/AllDocuments/AllDocuments';
+import AllFiles from '../Files/AllFiles/AllFiles';
+import AllInvoices from '../Invoices/AllInvoices/AllInvoices';
 
 // تعريف ثوابت للفئات المشتركة لتقليل التكرار
 const ICON_BUTTON_CLASSES = "p-2 transition-colors duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500";
@@ -237,7 +245,7 @@ const MainContainer = () => {
           <DateDisplay currentDate={currentDate} />
         </div>
 
-        {/* الإجراءات - نسخة سطح المكتب */}
+        {/* الإجراءات - نسخة سطح المكتب */ }
         <div className="items-center hidden h-16 space-x-4 md:flex">
           <nav className="flex items-center ml-4 space-x-3">
             <button className={ICON_BUTTON_CLASSES}><Icon path={ICONS.home} /></button>
@@ -289,7 +297,7 @@ const MainContainer = () => {
       <main className="flex-1 px-4 py-6 sm:px-6">
         <Routes>
           <Route path="/dashboard" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى لوحة التحكم</div>} />
-          <Route path="/files" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى الملفّـات</div>} />
+          <Route path="/files" element={<AllFiles />} />
           <Route path="/users" element={
             <div className="p-4 bg-white rounded-lg shadow-sm">
               <h1 className="mb-6 text-2xl font-bold text-gray-800">إدارة المستخدمين</h1>
@@ -493,16 +501,16 @@ const MainContainer = () => {
           <Route path="/settings" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى الإعدادات</div>} />
           {/* مسارات العملاء */}
           <Route path="/clients/all" element={<AllClients />} />
-          <Route path="/clients/types" element={<div className="p-4 bg-white rounded-lg shadow-sm">أنواع العملاء</div>} />
+          <Route path="/clients/types" element={<ClientTypes />} />
           {/* مسارات القضايا */}
-          <Route path="/cases/new" element={<div className="p-4 bg-white rounded-lg shadow-sm">إضافة قضية جديدة</div>} />
-          <Route path="/cases/all" element={<div className="p-4 bg-white rounded-lg shadow-sm">جميع القضايا</div>} />
-          <Route path="/cases/types" element={<div className="p-4 bg-white rounded-lg shadow-sm">أنواع القضايا</div>} />
+          <Route path="/cases/new" element={<NewCase />} />
+          <Route path="/cases/all" element={<AllCases />} />
+          <Route path="/cases/types" element={<CaseTypes />} />
           {/* مسار الجلسات */}
-          <Route path="/sessions" element={<div className="p-4 bg-white rounded-lg shadow-sm">جدول الجلسات</div>} />
+          <Route path="/sessions" element={<AllSessions />} />
           {/* مسارات جديدة تمت إضافتها */}
-          <Route path="/documents" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى المستندات</div>} />
-          <Route path="/invoices" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى الفواتير</div>} />
+          <Route path="/documents" element={<AllDocuments />} />
+          <Route path="/invoices" element={<AllInvoices />} />
           <Route path="/payments" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى المدفوعات</div>} />
           <Route path="/expenses" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى النفقات</div>} />
           <Route path="/notifications" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى الإشعارات</div>} />
