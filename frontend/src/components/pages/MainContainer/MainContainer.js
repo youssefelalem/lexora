@@ -13,6 +13,11 @@ import AllDocuments from '../Documents/AllDocuments/AllDocuments';
 import AllFiles from '../Files/AllFiles/AllFiles';
 import AllInvoices from '../Invoices/AllInvoices/AllInvoices';
 import AllPayments from '../Payments/AllPayments/AllPayments';
+import AllExpenses from '../Expenses/AllExpenses/AllExpenses';
+import AllNotifications from '../Notifications/AllNotifications/AllNotifications';
+import AllSettings from '../Settings/AllSettings/AllSettings';
+import Dashboard from '../Dashboard/Dashboard';
+import UsersManagement from '../Users/UsersManagement/UsersManagement';
 
 // تعريف ثوابت للفئات المشتركة لتقليل التكرار
 const ICON_BUTTON_CLASSES = "p-2 transition-colors duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500";
@@ -297,209 +302,11 @@ const MainContainer = () => {
       
       <main className="flex-1 px-4 py-6 sm:px-6">
         <Routes>
-          <Route path="/dashboard" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى لوحة التحكم</div>} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/files" element={<AllFiles />} />
-          <Route path="/users" element={
-            <div className="p-4 bg-white rounded-lg shadow-sm">
-              <h1 className="mb-6 text-2xl font-bold text-gray-800">إدارة المستخدمين</h1>
-              
-              {/* قسم البحث والفلترة */}
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <div className="relative flex-grow max-w-md">
-                  <input 
-                    type="text" 
-                    placeholder="البحث عن مستخدم..." 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
-                      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                  </div>
-                </div>
-                <button className="flex items-center px-4 py-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700">
-                  <svg className="w-5 h-5 ml-1" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                  إضافة مستخدم جديد
-                </button>
-              </div>
-              
-              {/* جدول المستخدمين */}
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="text-sm font-medium text-right text-gray-700 bg-gray-50">
-                      <th className="px-4 py-3 border-b border-gray-200">الاسم</th>
-                      <th className="px-4 py-3 border-b border-gray-200">البريد الإلكتروني</th>
-                      <th className="px-4 py-3 border-b border-gray-200">الدور</th>
-                      <th className="px-4 py-3 border-b border-gray-200">الحالة</th>
-                      <th className="px-4 py-3 border-b border-gray-200">تاريخ الإنشاء</th>
-                      <th className="px-4 py-3 border-b border-gray-200">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white">
-                    {/* نموذج بيانات المستخدم ١ */}
-                    <tr className="text-sm text-gray-700 hover:bg-gray-50">
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        <div className="flex items-center">
-                          <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 ml-2 font-medium text-white bg-blue-600 rounded-full">
-                            أ
-                          </div>
-                          أحمد محمد
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">ahmed@example.com</td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        <span className="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
-                          مدير النظام
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
-                          نشط
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">01-01-2024</td>
-                      <td className="px-4 py-3 border-b border-gray-200 whitespace-nowrap">
-                        <div className="flex items-center space-x-3 space-x-reverse">
-                          <button className="text-blue-600 hover:text-blue-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                          <button className="text-yellow-600 hover:text-yellow-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button className="text-red-600 hover:text-red-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    
-                    {/* نموذج بيانات المستخدم ٢ */}
-                    <tr className="text-sm text-gray-700 hover:bg-gray-50">
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        <div className="flex items-center">
-                          <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 ml-2 font-medium text-white bg-purple-600 rounded-full">
-                            س
-                          </div>
-                          سارة أحمد
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">sara@example.com</td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        <span className="px-2 py-1 text-xs font-medium text-purple-800 bg-purple-100 rounded-full">
-                          محامي
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
-                          نشط
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">15-02-2024</td>
-                      <td className="px-4 py-3 border-b border-gray-200 whitespace-nowrap">
-                        <div className="flex items-center space-x-3 space-x-reverse">
-                          <button className="text-blue-600 hover:text-blue-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                          <button className="text-yellow-600 hover:text-yellow-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button className="text-red-600 hover:text-red-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    
-                    {/* نموذج بيانات المستخدم ٣ */}
-                    <tr className="text-sm text-gray-700 hover:bg-gray-50">
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        <div className="flex items-center">
-                          <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 ml-2 font-medium text-white bg-green-600 rounded-full">
-                            م
-                          </div>
-                          محمد علي
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">mohamed@example.com</td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
-                          مساعد
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        <span className="px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full">
-                          معلق
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">10-03-2024</td>
-                      <td className="px-4 py-3 border-b border-gray-200 whitespace-nowrap">
-                        <div className="flex items-center space-x-3 space-x-reverse">
-                          <button className="text-blue-600 hover:text-blue-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                          <button className="text-yellow-600 hover:text-yellow-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button className="text-red-600 hover:text-red-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* ترقيم الصفحات */}
-              <div className="flex items-center justify-between mt-6">
-                <div className="text-sm text-gray-600">
-                  عرض <span className="font-medium">3</span> من أصل <span className="font-medium">25</span> مستخدم
-                </div>
-                <div className="flex space-x-1 space-x-reverse">
-                  <button className="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">
-                    السابق
-                  </button>
-                  <button className="px-3 py-1 text-sm text-white bg-blue-600 border border-blue-600 rounded-md">
-                    1
-                  </button>
-                  <button className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                    2
-                  </button>
-                  <button className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                    3
-                  </button>
-                  <button className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                    التالي
-                  </button>
-                </div>
-              </div>
-            </div>
-          } />
-          <Route path="/settings" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى الإعدادات</div>} />
+          {/* استخدام المكون الجديد UsersManagement */}
+          <Route path="/users" element={<UsersManagement />} />
+          <Route path="/settings" element={<AllSettings />} />
           {/* مسارات العملاء */}
           <Route path="/clients/all" element={<AllClients />} />
           <Route path="/clients/types" element={<ClientTypes />} />
@@ -513,8 +320,8 @@ const MainContainer = () => {
           <Route path="/documents" element={<AllDocuments />} />
           <Route path="/invoices" element={<AllInvoices />} />
           <Route path="/payments" element={<AllPayments />} />
-          <Route path="/expenses" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى النفقات</div>} />
-          <Route path="/notifications" element={<div className="p-4 bg-white rounded-lg shadow-sm">محتوى الإشعارات</div>} />
+          <Route path="/expenses" element={<AllExpenses />} />
+          <Route path="/notifications" element={<AllNotifications />} />
           <Route path="/support" element={<Support />} />
           {/* User Profile Route */}
           <Route path="/profile" element={<UserProfile />} />
