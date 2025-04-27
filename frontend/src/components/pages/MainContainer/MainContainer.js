@@ -19,6 +19,7 @@ import AllSettings from '../Settings/AllSettings/AllSettings';
 import UsersManagement from '../Users/UsersManagement/UsersManagement';
 import NewUser from '../Users/NewUser/NewUser';
 import EditUser from '../Users/EditUser/EditUser';
+import ViewUserProfile from '../Users/ViewUserProfile/ViewUserProfile';
 import Dashboard from '../Dashboard/Dashboard';
 
 // تعريف ثوابت للفئات المشتركة لتقليل التكرار
@@ -337,6 +338,7 @@ const MainContainer = () => {
           <Route path="/change-password" element={<ChangePassword />} />
           {/* User Edit Route */}
           <Route path="/edit-user/:id" element={<EditUser />} />
+          <Route path="/view-user/:id" element={<ViewUserProfile />} />
           
           {/* صفحة افتراضية للمسارات غير الموجودة */}
           <Route path="*" element={<div className="p-4 bg-white rounded-lg shadow-sm">الصفحة غير موجودة</div>} />
