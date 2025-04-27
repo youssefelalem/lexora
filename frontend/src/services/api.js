@@ -56,6 +56,27 @@ const userService = {
   deleteUser: (id) => api.delete(`/auth/users/${id}`)
 };
 
+// خدمات العملاء
+const clientService = {
+  // الحصول على قائمة العملاء
+  getAllClients: () => api.get('/clients'),
+  
+  // الحصول على عميل محدد
+  getClientById: (id) => api.get(`/clients/${id}`),
+  
+  // إنشاء عميل جديد
+  createClient: (clientData) => api.post('/clients', clientData),
+  
+  // تحديث عميل
+  updateClient: (id, clientData) => api.put(`/clients/${id}`, clientData),
+  
+  // تحديث حالة عميل
+  updateClientStatus: (id, status) => api.put(`/clients/${id}/status`, { status }),
+  
+  // حذف عميل
+  deleteClient: (id) => api.delete(`/clients/${id}`)
+};
+
 // خدمات المصادقة
 const authService = {
   // تسجيل الدخول
@@ -72,5 +93,5 @@ const authService = {
 };
 
 // تصدير الخدمات
-export { userService, authService };
+export { userService, authService, clientService };
 export default api;

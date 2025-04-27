@@ -22,12 +22,28 @@ import EditUser from '../Users/EditUser/EditUser';
 import ViewUserProfile from '../Users/ViewUserProfile/ViewUserProfile';
 import Dashboard from '../Dashboard/Dashboard';
 
+/**
+ * هذا الملف يمثل الحاوية الرئيسية للتطبيق وينظم:
+ * - القائمة العلوية (الهيدر)
+ * - القائمة الجانبية
+ * - منطقة العرض الرئيسية
+ * - التوجيه بين الصفحات المختلفة
+ * 
+ * Ce fichier représente le conteneur principal de l'application et organise:
+ * - Menu supérieur (header)
+ * - Barre latérale
+ * - Zone d'affichage principale
+ * - Navigation entre les différentes pages
+ */
+
 // تعريف ثوابت للفئات المشتركة لتقليل التكرار
+// Définition des constantes pour les classes communes afin de réduire la répétition
 const ICON_BUTTON_CLASSES = "p-2 transition-colors duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500";
 const ICON_CLASSES = "w-5 h-5 text-gray-700";
 const MOBILE_BUTTON_CLASSES = "flex items-center justify-start w-full px-3 py-2 text-left text-gray-700 transition-colors duration-200 rounded-md hover:bg-gray-100";
 
 // تعريف مكون مستقل للأيقونات لتجنب التكرار
+// Définition d'un composant indépendant pour les icônes pour éviter la répétition
 const Icon = ({ path, className = ICON_CLASSES }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
@@ -35,6 +51,7 @@ const Icon = ({ path, className = ICON_CLASSES }) => (
 );
 
 // تعريف مسارات الأيقونات
+// Définition des chemins d'icônes
 const ICONS = {
   menu: "M4 6h16M4 12h16M4 18h16",
   home: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
@@ -67,6 +84,7 @@ const SUBMENU_ICONS = {
 };
 
 // مكون لعرض التاريخ
+// Composant pour afficher la date
 const DateDisplay = ({ currentDate }) => (
   <div className="flex items-center overflow-hidden border border-gray-300 rounded-md">
     <div className="flex items-center justify-center p-2 border-r border-gray-300 bg-blue-50">
@@ -79,6 +97,7 @@ const DateDisplay = ({ currentDate }) => (
 );
 
 // مكون زر القائمة المتنقلة
+// Composant pour le bouton de menu mobile
 const NavButton = ({ icon, label, onClick }) => (
   <button onClick={onClick} className={MOBILE_BUTTON_CLASSES}>
     <Icon path={icon} className="w-5 h-5 ml-2 text-gray-700" />
@@ -87,6 +106,7 @@ const NavButton = ({ icon, label, onClick }) => (
 );
 
 // مكون للقائمة المنسدلة المتنقلة
+// Composant pour le sous-menu mobile
 const MobileSubmenu = ({ title, items, onClick, navigate }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -145,10 +165,12 @@ const MainContainer = () => {
   
   useEffect(() => {
     // تنسيق التاريخ الحالي "DD-Month-YYYY"
+    // Format de la date actuelle "JJ-Mois-AAAA"
     const today = new Date();
     setCurrentDate(`${String(today.getDate()).padStart(2, '0')}-${today.toLocaleString('en-US', { month: 'long' })}-${today.getFullYear()}`);
     
     // معالجة النقرات خارج القائمة المتنقلة
+    // Gestion des clics en dehors du menu mobile
     const handleClickOutside = (event) => {
       if (mobileMenuOpen && 
           mobileMenuRef.current && 
@@ -160,6 +182,7 @@ const MainContainer = () => {
     };
     
     // الاستماع لتحديثات رؤية الشريط الجانبي
+    // Listening to sidebar visibility updates
     const handleSidebarStateChange = (event) => {
       if (event.detail.source !== 'toggle-button') {
         setSidebarVisible(event.detail.visible);
@@ -167,6 +190,7 @@ const MainContainer = () => {
     };
 
     // حفظ تفضيل رؤية الشريط الجانبي
+    // Saving the sidebar visibility preference
     const savedSidebarState = localStorage.getItem('sidebarVisible');
     if (savedSidebarState !== null) {
       setSidebarVisible(savedSidebarState === 'true');
@@ -182,6 +206,7 @@ const MainContainer = () => {
   }, [mobileMenuOpen]);
 
   // تبديل رؤية الشريط الجانبي
+  // Toggle the sidebar visibility
   const toggleSidebar = (e) => {
     if (e) e.stopPropagation();
     const newVisibility = !sidebarVisible;
@@ -200,18 +225,21 @@ const MainContainer = () => {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   // التنقل إلى الصفحة المحددة وإغلاق القائمة
+  // Navigate to the specified page and close the menu
   const navigateTo = (path) => {
     navigate(path);
     closeMobileMenu();
   };
 
   // تعريف عناصر القائمة المتنقلة
+  // Define mobile menu items
   const mobileNavItems = [
     { icon: ICONS.dashboard, label: "لوحة التحكم", onClick: () => navigateTo('/dashboard') },
     { icon: ICONS.files, label: "الملفّـات", onClick: () => navigateTo('/files') },
   ];
 
   // تعريف عناصر إضافية للقائمة المتنقلة
+  // Define additional mobile menu items
   const additionalMobileNavItems = [
     { icon: ICONS.documents, label: "المستندات", onClick: () => navigateTo('/documents') },
     { icon: ICONS.invoices, label: "الفواتير", onClick: () => navigateTo('/invoices') },
@@ -223,11 +251,13 @@ const MainContainer = () => {
     { icon: ICONS.support, label: "المساعدة والدعم", onClick: () => navigateTo('/support') },
     { icon: ICONS.logout, label: "تسجيل الخروج", onClick: () => {
       // يمكن هنا استدعاء دالة تسجيل الخروج من AuthContext
+      // Ici, vous pouvez appeler la fonction de déconnexion d'AuthContext
       navigateTo('/login');
     }},
   ];
 
   // تعريف عناصر القائمة المتنقلة
+  // Define mobile submenu items
   const mobileSubmenuItems = [
     { label: "عرض جميع العملاء", path: "/clients/all", icon: SUBMENU_ICONS.allClients },
     { label: "عرض أنواع العملاء", path: "/clients/types", icon: SUBMENU_ICONS.clientTypes }
