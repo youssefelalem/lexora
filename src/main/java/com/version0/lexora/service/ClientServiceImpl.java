@@ -3,7 +3,6 @@ package com.version0.lexora.service;
 import com.version0.lexora.dto.ClientDTO;
 import com.version0.lexora.model.Client;
 import com.version0.lexora.repository.ClientRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +19,6 @@ public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository clientRepository;
 
-    @Autowired
     public ClientServiceImpl(ClientRepository clientRepository) {
         this.clientRepository = clientRepository;
     }

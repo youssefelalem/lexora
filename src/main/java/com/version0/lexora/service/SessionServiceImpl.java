@@ -9,7 +9,6 @@ import com.version0.lexora.repository.SessionRepository;
 import com.version0.lexora.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +27,6 @@ public class SessionServiceImpl implements SessionService {
     private final DossierRepository dossierRepository;
     private final UserRepository userRepository;
 
-    @Autowired
     public SessionServiceImpl(
             SessionRepository sessionRepository,
             DossierRepository dossierRepository,

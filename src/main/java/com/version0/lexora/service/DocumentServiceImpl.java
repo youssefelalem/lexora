@@ -6,7 +6,6 @@ import com.version0.lexora.model.Dossier;
 import com.version0.lexora.repository.DocumentRepository;
 import com.version0.lexora.repository.DossierRepository;
 import com.version0.lexora.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +36,6 @@ public class DocumentServiceImpl implements DocumentService {
     @Value("${app.file.upload-dir:uploads/documents}")
     private String uploadDirectory;
 
-    @Autowired
     public DocumentServiceImpl(
             DocumentRepository documentRepository,
             DossierRepository dossierRepository,

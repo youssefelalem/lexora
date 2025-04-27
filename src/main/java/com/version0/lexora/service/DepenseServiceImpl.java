@@ -6,7 +6,6 @@ import com.version0.lexora.model.Dossier;
 import com.version0.lexora.repository.DepenseRepository;
 import com.version0.lexora.repository.DossierRepository;
 import com.version0.lexora.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +35,6 @@ public class DepenseServiceImpl implements DepenseService {
     @Value("${app.file.upload-dir:uploads/justificatifs}")
     private String uploadDirectory;
 
-    @Autowired
     public DepenseServiceImpl(
             DepenseRepository depenseRepository,
             DossierRepository dossierRepository,

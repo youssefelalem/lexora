@@ -13,7 +13,6 @@ import com.version0.lexora.repository.PaiementRepository;
 import com.version0.lexora.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +44,6 @@ public class PaiementServiceImpl implements PaiementService {
     @Value("${file.upload-dir:/uploads/justificatifs}")
     private String uploadDir;
 
-    @Autowired
     public PaiementServiceImpl(
             PaiementRepository paiementRepository,
             ClientRepository clientRepository,

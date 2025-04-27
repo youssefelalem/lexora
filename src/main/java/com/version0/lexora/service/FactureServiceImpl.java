@@ -10,7 +10,6 @@ import com.version0.lexora.repository.ClientRepository;
 import com.version0.lexora.repository.DossierRepository;
 import com.version0.lexora.repository.FactureRepository;
 import com.version0.lexora.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +32,6 @@ public class FactureServiceImpl implements FactureService {
     private final DossierRepository dossierRepository;
     private final UserRepository userRepository;
 
-    @Autowired
     public FactureServiceImpl(
             FactureRepository factureRepository,
             ClientRepository clientRepository,

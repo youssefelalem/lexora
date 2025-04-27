@@ -2,7 +2,6 @@ package com.version0.lexora.controller;
 
 import com.version0.lexora.dto.DossierDTO;
 import com.version0.lexora.service.DossierService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +17,6 @@ public class DossierController {
     
     private final DossierService dossierService;
     
-    @Autowired
     public DossierController(DossierService dossierService) {
         this.dossierService = dossierService;
     }

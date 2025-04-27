@@ -2,7 +2,6 @@ package com.version0.lexora.controller;
 
 import com.version0.lexora.dto.DepenseDTO;
 import com.version0.lexora.service.DepenseService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +20,6 @@ public class DepenseController {
     
     private final DepenseService depenseService;
     
-    @Autowired
     public DepenseController(DepenseService depenseService) {
         this.depenseService = depenseService;
     }

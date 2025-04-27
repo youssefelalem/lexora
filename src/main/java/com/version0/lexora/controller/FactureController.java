@@ -2,7 +2,6 @@ package com.version0.lexora.controller;
 
 import com.version0.lexora.dto.FactureDTO;
 import com.version0.lexora.service.FactureService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +19,6 @@ public class FactureController {
     
     private final FactureService factureService;
     
-    @Autowired
     public FactureController(FactureService factureService) {
         this.factureService = factureService;
     }

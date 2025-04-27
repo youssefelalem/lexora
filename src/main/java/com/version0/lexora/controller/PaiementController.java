@@ -2,7 +2,6 @@ package com.version0.lexora.controller;
 
 import com.version0.lexora.dto.PaiementDTO;
 import com.version0.lexora.service.PaiementService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +20,6 @@ public class PaiementController {
     
     private final PaiementService paiementService;
     
-    @Autowired
     public PaiementController(PaiementService paiementService) {
         this.paiementService = paiementService;
     }
