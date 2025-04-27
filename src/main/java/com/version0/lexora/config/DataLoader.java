@@ -44,11 +44,11 @@ public class DataLoader implements CommandLineRunner {
             // لا يوجد مسؤول، قم بإنشاء واحد
             // No admin found, create one
             Utilisateur adminUser = new Utilisateur(
-                    "Admin", // اسم المسؤول الافتراضي // Default admin name
+                    "Admin", // اسم المسؤول الافتراضي (الاسم الأول) // Default admin first name
+                    "System", // اسم العائلة للمسؤول الافتراضي // Default admin last name
                     "admin@lexora.com", // البريد الإلكتروني الافتراضي للمسؤول // Default admin email
                     passwordEncoder.encode("admin123"), // كلمة المرور الافتراضية (يجب تغييرها في بيئة الإنتاج!) // Default password (CHANGE IN PRODUCTION!)
                     Role.ADMINISTRATEUR // تعيين دور المسؤول // Assign the ADMINISTRATEUR role
-
                 );
             // adminUser.setEstActive(true); // Supprimé car estActive est vrai par défaut dans le constructeur Utilisateur
 

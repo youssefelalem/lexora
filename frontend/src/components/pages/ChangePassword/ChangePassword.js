@@ -24,9 +24,9 @@ const PasswordRequirement = ({ text, met }) => (
 const ChangePassword = () => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    motDePasseActuel: '',
+    nouveauMotDePasse: '',
+    confirmationMotDePasse: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -56,7 +56,7 @@ const ChangePassword = () => {
       hasLowercase: hasLowerCase,
       hasNumber: hasNumber,
       hasSpecial: hasSpecialChar,
-      passwordsMatch: formData.confirmPassword === password,
+      passwordsMatch: formData.confirmationMotDePasse === password,
     });
 
     return (
@@ -77,16 +77,16 @@ const ChangePassword = () => {
         [name]: value
       };
       
-      if (name === 'newPassword') {
+      if (name === 'nouveauMotDePasse') {
         validatePassword(value);
       }
       
-      if (name === 'confirmPassword' || name === 'newPassword') {
+      if (name === 'confirmationMotDePasse' || name === 'nouveauMotDePasse') {
         setPasswordRequirements(prev => ({
           ...prev,
           passwordsMatch: 
-            (name === 'confirmPassword' && formData.newPassword === value) ||
-            (name === 'newPassword' && formData.confirmPassword === value)
+            (name === 'confirmationMotDePasse' && formData.nouveauMotDePasse === value) ||
+            (name === 'nouveauMotDePasse' && formData.confirmationMotDePasse === value)
         }));
       }
       
@@ -108,12 +108,12 @@ const ChangePassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (formData.newPassword !== formData.confirmPassword) {
+    if (formData.nouveauMotDePasse !== formData.confirmationMotDePasse) {
       setError('كلمات المرور الجديدة غير متطابقة');
       return;
     }
     
-    if (!validatePassword(formData.newPassword)) {
+    if (!validatePassword(formData.nouveauMotDePasse)) {
       setError('كلمة المرور الجديدة لا تلبي متطلبات الأمان');
       return;
     }
@@ -123,12 +123,12 @@ const ChangePassword = () => {
     setSuccess(false);
     
     try {
-      // Make API call to change password
+      // إرسال طلب لتغيير كلمة المرور
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/users/change-password`, 
+        `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/utilisateurs/${user.idUtilisateur}/changer-mot-de-passe`, 
         {
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword
+          motDePasseActuel: formData.motDePasseActuel,
+          nouveauMotDePasse: formData.nouveauMotDePasse
         },
         {
           headers: { 
@@ -140,13 +140,13 @@ const ChangePassword = () => {
       
       if (response.data) {
         setSuccess(true);
-        // Reset form
+        // إعادة تعيين النموذج
         setFormData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
+          motDePasseActuel: '',
+          nouveauMotDePasse: '',
+          confirmationMotDePasse: '',
         });
-        // Reset password requirements
+        // إعادة تعيين متطلبات كلمة المرور
         setPasswordRequirements({
           length: false,
           hasUppercase: false,
@@ -157,8 +157,15 @@ const ChangePassword = () => {
         });
       }
     } catch (error) {
-      console.error('Error changing password:', error);
+      console.error('خطأ في تغيير كلمة المرور:', error);
       setError(error.response?.data?.message || 'حدث خطأ أثناء تغيير كلمة المرور');
+      
+      // التعامل مع أنواع محددة من الأخطاء
+      if (error.response?.status === 401) {
+        setError('كلمة المرور الحالية غير صحيحة');
+      } else if (error.response?.status === 400 && error.response?.data?.message?.includes('password')) {
+        setError('كلمة المرور الجديدة لا تلبي متطلبات الأمان');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -190,11 +197,12 @@ const ChangePassword = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور الحالية</label>
             <input
               type="password"
-              name="currentPassword"
-              value={formData.currentPassword}
+              name="motDePasseActuel"
+              value={formData.motDePasseActuel}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="current-password"
             />
           </div>
           
@@ -202,11 +210,12 @@ const ChangePassword = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور الجديدة</label>
             <input
               type="password"
-              name="newPassword"
-              value={formData.newPassword}
+              name="nouveauMotDePasse"
+              value={formData.nouveauMotDePasse}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="new-password"
             />
           </div>
           
@@ -214,11 +223,12 @@ const ChangePassword = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">تأكيد كلمة المرور الجديدة</label>
             <input
               type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
+              name="confirmationMotDePasse"
+              value={formData.confirmationMotDePasse}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="new-password"
             />
           </div>
         </div>

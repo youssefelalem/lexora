@@ -1,367 +1,643 @@
-import React, { useState } from 'react';
-
-// تعريف ثوابت للأزرار والشارات
-const BUTTON_CLASSES = "flex items-center px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700";
-const STATUS_BADGES = {
-  completed: "px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full",
-  pending: "px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full",
-  failed: "px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full",
-  refunded: "px-2 py-1 text-xs font-medium text-purple-800 bg-purple-100 rounded-full",
-};
-
-const TYPE_BADGES = {
-  cash: "px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full",
-  creditcard: "px-2 py-1 text-xs font-medium text-indigo-800 bg-indigo-100 rounded-full",
-  banktransfer: "px-2 py-1 text-xs font-medium text-teal-800 bg-teal-100 rounded-full",
-  check: "px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-full",
-};
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+// eslint-disable-next-line no-unused-vars
+import { useNavigate } from 'react-router-dom';
 
 const AllPayments = () => {
-  // بيانات نموذجية للمدفوعات
-  const [payments, setPayments] = useState([
-    { 
-      id: 1, 
-      invoiceId: 'INV-2025-001',
-      clientName: 'شركة الفجر للتكنولوجيا',
-      amount: 5000.00,
-      paymentDate: '15-03-2025',
-      status: 'completed',
-      type: 'banktransfer',
-      caseReference: 'CASE-2025-003',
-      notes: 'تم الدفع بالكامل'
-    },
-    { 
-      id: 2, 
-      invoiceId: 'INV-2025-002',
-      clientName: 'محمد علي',
-      amount: 2500.00,
-      paymentDate: '20-03-2025',
-      status: 'completed',
-      type: 'cash',
-      caseReference: 'CASE-2025-007',
-      notes: 'دفعة أولى'
-    },
-    { 
-      id: 3, 
-      invoiceId: 'INV-2025-003',
-      clientName: 'مؤسسة النور للاستشارات',
-      amount: 7500.00,
-      paymentDate: '22-03-2025',
-      status: 'pending',
-      type: 'creditcard',
-      caseReference: 'CASE-2025-011',
-      notes: 'في انتظار المعالجة'
-    },
-    { 
-      id: 4, 
-      invoiceId: 'INV-2025-004',
-      clientName: 'خالد عبد الرحمن',
-      amount: 1500.00,
-      paymentDate: '01-04-2025',
-      status: 'failed',
-      type: 'creditcard',
-      caseReference: 'CASE-2025-015',
-      notes: 'بطاقة منتهية الصلاحية'
-    },
-    { 
-      id: 5, 
-      invoiceId: 'INV-2025-005',
-      clientName: 'شركة المستقبل للاتصالات',
-      amount: 12000.00,
-      paymentDate: '05-04-2025',
-      status: 'completed',
-      type: 'check',
-      caseReference: 'CASE-2025-019',
-      notes: 'شيك رقم 12345'
-    },
-    { 
-      id: 6, 
-      invoiceId: 'INV-2025-006',
-      clientName: 'سارة أحمد',
-      amount: 3500.00,
-      paymentDate: '10-04-2025',
-      status: 'refunded',
-      type: 'banktransfer',
-      caseReference: 'CASE-2025-021',
-      notes: 'تم استرداد المبلغ بالكامل'
-    },
-  ]);
-
-  // حالات البحث والتصفية
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('الكل');
-  const [filterType, setFilterType] = useState('الكل');
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
-  
-  const statusTypes = ['الكل', 'completed', 'pending', 'failed', 'refunded'];
-  const paymentTypes = ['الكل', 'cash', 'creditcard', 'banktransfer', 'check'];
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [currentPayment, setCurrentPayment] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  const navigate = useNavigate();
 
-  // تحويل حالة الدفع إلى اللغة العربية للعرض
-  const getStatusInArabic = (status) => {
-    switch(status) {
-      case 'completed':
-        return 'مكتمل';
-      case 'pending':
-        return 'معلق';
-      case 'failed':
-        return 'فشل';
-      case 'refunded':
-        return 'مسترد';
-      default:
-        return status;
-    }
-  };
-
-  // تحويل نوع الدفع إلى اللغة العربية للعرض
-  const getTypeInArabic = (type) => {
-    switch(type) {
-      case 'cash':
-        return 'نقدي';
-      case 'creditcard':
-        return 'بطاقة ائتمان';
-      case 'banktransfer':
-        return 'تحويل بنكي';
-      case 'check':
-        return 'شيك';
-      default:
-        return type;
-    }
-  };
-
-  // تصفية المدفوعات حسب البحث والفلترة
-  const filteredPayments = payments.filter(payment => {
-    const matchesSearch = 
-      payment.invoiceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.caseReference.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === 'الكل' || payment.status === filterStatus;
-    const matchesType = filterType === 'الكل' || payment.type === filterType;
-    
-    // تصفية حسب نطاق التاريخ إذا تم تحديده
-    let matchesDateRange = true;
-    if (dateRange.start && dateRange.end) {
-      const paymentDate = new Date(payment.paymentDate.split('-').reverse().join('-'));
-      const startDate = new Date(dateRange.start);
-      const endDate = new Date(dateRange.end);
-      endDate.setHours(23, 59, 59); // Set to end of day
-      
-      matchesDateRange = paymentDate >= startDate && paymentDate <= endDate;
-    }
-    
-    return matchesSearch && matchesStatus && matchesType && matchesDateRange;
+  // بيانات جديدة للمدفوعات
+  const [newPayment, setNewPayment] = useState({
+    clientId: '',
+    dossierId: '',
+    factureId: '',
+    montant: '',
+    devise: 'MAD', // العملة الافتراضية
+    methode: 'VIREMENT', // طريقة الدفع الافتراضية
+    datePaiement: new Date().toISOString().split('T')[0],
+    numeroReference: '',
+    banqueReference: '',
+    notes: '',
+    statut: 'ACTIF'
   });
 
-  // حساب إجمالي المدفوعات المعروضة
-  const totalAmount = filteredPayments.reduce((sum, payment) => {
-    return payment.status === 'completed' ? sum + payment.amount : sum;
-  }, 0);
+  // طرق الدفع المتاحة
+  const methodesPayment = [
+    { id: 'ESPECE', name: 'نقدًا' },
+    { id: 'CHEQUE', name: 'شيك' },
+    { id: 'VIREMENT', name: 'تحويل بنكي' },
+    { id: 'CARTE', name: 'بطاقة بنكية' }
+  ];
+
+  // العملات المتاحة
+  const devises = [
+    { id: 'MAD', name: 'درهم مغربي' },
+    { id: 'EUR', name: 'يورو' },
+    { id: 'USD', name: 'دولار أمريكي' }
+  ];
+
+  // حالات الدفع
+  const statuts = [
+    { id: 'ACTIF', name: 'مفعّل' },
+    { id: 'EN_ATTENTE', name: 'قيد الانتظار' },
+    { id: 'ANNULE', name: 'ملغى' }
+  ];
+
+  // قائمة العملاء (ستُجلب من الخادم)
+  const [clients, setClients] = useState([]);
+  // قائمة الملفات (ستُجلب من الخادم)
+  const [dossiers, setDossiers] = useState([]);
+  // قائمة الفواتير (ستُجلب من الخادم)
+  const [factures, setFactures] = useState([]);
+
+  // جلب بيانات المدفوعات من الخلفية
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/api/paiements');
+        setPayments(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('خطأ في جلب بيانات المدفوعات:', err);
+        setError('حدث خطأ أثناء جلب بيانات المدفوعات');
+        // استخدام بيانات تجريبية في حالة الخطأ
+        setPayments([
+          {
+            idPaiement: 1,
+            clientId: 1,
+            clientNom: 'شركة الأمل',
+            dossierId: 101,
+            dossierReference: 'DS-2025-101',
+            factureId: 501,
+            factureNumero: 'FACT-2025-501',
+            montant: 5000.00,
+            devise: 'MAD',
+            methode: 'VIREMENT',
+            datePaiement: '2025-04-15',
+            numeroReference: 'REF123456',
+            banqueReference: 'بنك المغرب',
+            notes: 'دفعة أولى',
+            statut: 'ACTIF',
+            dateCreation: '2025-04-10',
+            utilisateurCreationId: 1,
+            utilisateurCreationNom: 'أحمد علي'
+          },
+          {
+            idPaiement: 2,
+            clientId: 2,
+            clientNom: 'شركة النور',
+            dossierId: 102,
+            dossierReference: 'DS-2025-102',
+            factureId: 502,
+            factureNumero: 'FACT-2025-502',
+            montant: 7500.00,
+            devise: 'MAD',
+            methode: 'CHEQUE',
+            datePaiement: '2025-04-18',
+            numeroReference: 'CHK789012',
+            banqueReference: 'البنك الشعبي',
+            notes: 'دفعة كاملة',
+            statut: 'ACTIF',
+            dateCreation: '2025-04-17',
+            utilisateurCreationId: 2,
+            utilisateurCreationNom: 'سمية الحسن'
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // جلب البيانات المطلوبة
+    const fetchRequiredData = async () => {
+      try {
+        // جلب بيانات العملاء
+        const clientsResponse = await axios.get('/api/clients');
+        setClients(clientsResponse.data);
+        
+        // جلب بيانات الملفات
+        const dossiersResponse = await axios.get('/api/dossiers');
+        setDossiers(dossiersResponse.data);
+        
+        // جلب بيانات الفواتير
+        const facturesResponse = await axios.get('/api/factures');
+        setFactures(facturesResponse.data);
+      } catch (err) {
+        console.error('خطأ في جلب البيانات المطلوبة:', err);
+        // بيانات تجريبية في حالة الخطأ
+        setClients([
+          { id: 1, nom: 'شركة الأمل' },
+          { id: 2, nom: 'شركة النور' }
+        ]);
+        setDossiers([
+          { id: 101, reference: 'DS-2025-101', client: { id: 1, nom: 'شركة الأمل' } },
+          { id: 102, reference: 'DS-2025-102', client: { id: 2, nom: 'شركة النور' } }
+        ]);
+        setFactures([
+          { id: 501, numero: 'FACT-2025-501', dossier: { id: 101 }, client: { id: 1 } },
+          { id: 502, numero: 'FACT-2025-502', dossier: { id: 102 }, client: { id: 2 } }
+        ]);
+      }
+    };
+    
+    fetchRequiredData();
+    fetchPayments();
+  }, []);
+
+  // حذف دفعة
+  const handleDelete = async (id) => {
+    if (window.confirm('هل أنت متأكد من حذف هذه الدفعة؟')) {
+      try {
+        await axios.delete(`/api/paiements/${id}`);
+        setPayments(payments.filter(payment => payment.idPaiement !== id));
+      } catch (err) {
+        console.error('خطأ في حذف الدفعة:', err);
+        setError('حدث خطأ أثناء حذف الدفعة');
+      }
+    }
+  };
+
+  // تعديل دفعة
+  const handleEdit = (payment) => {
+    setCurrentPayment(payment);
+    setNewPayment({
+      clientId: payment.clientId,
+      dossierId: payment.dossierId,
+      factureId: payment.factureId,
+      montant: payment.montant,
+      devise: payment.devise,
+      methode: payment.methode,
+      datePaiement: payment.datePaiement,
+      numeroReference: payment.numeroReference,
+      banqueReference: payment.banqueReference,
+      notes: payment.notes,
+      statut: payment.statut
+    });
+    setShowAddModal(true);
+  };
+
+  // حفظ الدفعة (إضافة أو تعديل)
+  const handleSavePayment = async () => {
+    try {
+      let response;
+      if (currentPayment) {
+        // تعديل دفعة موجودة
+        response = await axios.put(`/api/paiements/${currentPayment.idPaiement}`, newPayment);
+        setPayments(payments.map(p => p.idPaiement === currentPayment.idPaiement ? response.data : p));
+      } else {
+        // إضافة دفعة جديدة
+        response = await axios.post('/api/paiements', newPayment);
+        setPayments([...payments, response.data]);
+      }
+      setShowAddModal(false);
+      resetForm();
+    } catch (err) {
+      console.error('خطأ في حفظ الدفعة:', err);
+      setError('حدث خطأ أثناء حفظ الدفعة');
+      
+      // عملية محاكاة للإضافة في حالة الخطأ (للتطوير فقط)
+      if (!currentPayment) {
+        const mockPayment = {
+          idPaiement: payments.length + 1,
+          ...newPayment,
+          clientNom: clients.find(c => c.id === parseInt(newPayment.clientId))?.nom || 'عميل غير معروف',
+          dossierReference: dossiers.find(d => d.id === parseInt(newPayment.dossierId))?.reference || 'ملف غير معروف',
+          factureNumero: factures.find(f => f.id === parseInt(newPayment.factureId))?.numero || 'فاتورة غير معروفة',
+          dateCreation: new Date().toISOString().split('T')[0],
+          utilisateurCreationId: 1,
+          utilisateurCreationNom: 'مستخدم نظام'
+        };
+        setPayments([...payments, mockPayment]);
+        setShowAddModal(false);
+        resetForm();
+      } else {
+        // عملية محاكاة للتعديل
+        const updatedPayments = payments.map(p => {
+          if (p.idPaiement === currentPayment.idPaiement) {
+            return {
+              ...p,
+              ...newPayment,
+              clientNom: clients.find(c => c.id === parseInt(newPayment.clientId))?.nom || p.clientNom,
+              dossierReference: dossiers.find(d => d.id === parseInt(newPayment.dossierId))?.reference || p.dossierReference,
+              factureNumero: factures.find(f => f.id === parseInt(newPayment.factureId))?.numero || p.factureNumero
+            };
+          }
+          return p;
+        });
+        setPayments(updatedPayments);
+        setShowAddModal(false);
+        resetForm();
+      }
+    }
+  };
+
+  // تحديث بيانات النموذج عند التعديل
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewPayment({
+      ...newPayment,
+      [name]: value
+    });
+    
+    // تحديث معلومات الملف والفاتورة بناءً على العميل المختار
+    if (name === 'clientId') {
+      const clientDossiers = dossiers.filter(d => d.client?.id === parseInt(value));
+      if (clientDossiers.length > 0) {
+        setNewPayment(prev => ({
+          ...prev,
+          dossierId: clientDossiers[0].id
+        }));
+        
+        const dossierFactures = factures.filter(f => f.dossier?.id === clientDossiers[0].id);
+        if (dossierFactures.length > 0) {
+          setNewPayment(prev => ({
+            ...prev,
+            factureId: dossierFactures[0].id
+          }));
+        }
+      }
+    }
+    
+    // تحديث الفاتورة بناءً على الملف المختار
+    if (name === 'dossierId') {
+      const dossierFactures = factures.filter(f => f.dossier?.id === parseInt(value));
+      if (dossierFactures.length > 0) {
+        setNewPayment(prev => ({
+          ...prev,
+          factureId: dossierFactures[0].id
+        }));
+      }
+    }
+  };
+
+  // إعادة تعيين النموذج
+  const resetForm = () => {
+    setCurrentPayment(null);
+    setNewPayment({
+      clientId: '',
+      dossierId: '',
+      factureId: '',
+      montant: '',
+      devise: 'MAD',
+      methode: 'VIREMENT',
+      datePaiement: new Date().toISOString().split('T')[0],
+      numeroReference: '',
+      banqueReference: '',
+      notes: '',
+      statut: 'ACTIF'
+    });
+  };
+
+  // تصفية المدفوعات بناءً على البحث
+  const filteredPayments = payments.filter(payment => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      payment.clientNom?.toLowerCase().includes(searchLower) ||
+      payment.dossierReference?.toLowerCase().includes(searchLower) ||
+      payment.factureNumero?.toLowerCase().includes(searchLower) ||
+      payment.montant?.toString().includes(searchTerm) ||
+      payment.numeroReference?.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-sm">
-      <h1 className="mb-6 text-2xl font-bold text-gray-800">المدفوعات</h1>
-      
-      {/* قسم البحث والفلترة */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* البحث */}
-          <div className="relative flex-grow max-w-md">
-            <input 
-              type="text" 
-              placeholder="البحث حسب الفاتورة، العميل أو القضية..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-            </div>
-          </div>
-          
-          {/* فلتر حالة الدفع */}
-          <div className="w-40">
-            <select 
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {statusTypes.map(status => (
-                <option key={status} value={status}>
-                  {status === 'الكل' ? status : getStatusInArabic(status)}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          {/* فلتر نوع الدفع */}
-          <div className="w-40">
-            <select 
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {paymentTypes.map(type => (
-                <option key={type} value={type}>
-                  {type === 'الكل' ? type : getTypeInArabic(type)}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          {/* فلتر نطاق التاريخ */}
-          <div className="flex gap-2">
-            <div className="w-36">
-              <input 
-                type="date" 
-                value={dateRange.start}
-                onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <div className="bg-white rounded-lg shadow-sm">
+      <div className="p-6">
+        <div className="flex flex-col mb-6 md:flex-row md:items-center md:justify-between">
+          <h1 className="mb-4 text-2xl font-semibold text-gray-800 md:mb-0">إدارة المدفوعات</h1>
+          <div className="flex flex-col gap-3 md:flex-row">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="البحث في المدفوعات..."
+                className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </div>
             </div>
-            <span className="self-center">إلى</span>
-            <div className="w-36">
-              <input 
-                type="date" 
-                value={dateRange.end}
-                onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <button
+              className="px-4 py-2 text-white transition duration-300 bg-blue-600 rounded-lg hover:bg-blue-700"
+              onClick={() => {
+                resetForm();
+                setShowAddModal(true);
+              }}
+            >
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                إضافة دفعة جديدة
+              </div>
+            </button>
           </div>
         </div>
-        
-        {/* زر إضافة مدفوعات */}
-        <button className={BUTTON_CLASSES}>
-          <svg className="w-5 h-5 ml-1" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-          </svg>
-          تسجيل مدفوعات جديدة
-        </button>
-      </div>
-      
-      {/* ملخص المدفوعات */}
-      <div className="p-4 mb-6 bg-gray-50 border border-gray-200 rounded-lg">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="p-3 text-center bg-white rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500">إجمالي المدفوعات المكتملة</h3>
-            <p className="mt-2 text-3xl font-bold text-gray-800 dir-ltr">{totalAmount.toFixed(2)} د.م</p>
+
+        {error && (
+          <div className="p-4 mb-4 text-red-700 bg-red-100 border-l-4 border-red-500">
+            <p>{error}</p>
           </div>
-          <div className="p-3 text-center bg-white rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500">عدد المعاملات</h3>
-            <p className="mt-2 text-3xl font-bold text-gray-800">{filteredPayments.length}</p>
-          </div>
-          <div className="p-3 text-center bg-white rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500">المدفوعات المعلقة</h3>
-            <p className="mt-2 text-3xl font-bold text-yellow-600">
-              {payments.filter(payment => payment.status === 'pending').length}
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* جدول المدفوعات */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="text-sm font-medium text-right text-gray-700 bg-gray-50">
-              <th className="px-4 py-3 border-b border-gray-200">رقم الفاتورة</th>
-              <th className="px-4 py-3 border-b border-gray-200">العميل</th>
-              <th className="px-4 py-3 border-b border-gray-200">المبلغ</th>
-              <th className="px-4 py-3 border-b border-gray-200">تاريخ الدفع</th>
-              <th className="px-4 py-3 border-b border-gray-200">طريقة الدفع</th>
-              <th className="px-4 py-3 border-b border-gray-200">الحالة</th>
-              <th className="px-4 py-3 border-b border-gray-200">رقم القضية</th>
-              <th className="px-4 py-3 border-b border-gray-200">ملاحظات</th>
-              <th className="px-4 py-3 border-b border-gray-200">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white">
-            {filteredPayments.length > 0 ? filteredPayments.map(payment => (
-              <tr key={payment.id} className="text-sm text-gray-700 hover:bg-gray-50">
-                <td className="px-4 py-3 border-b border-gray-200">{payment.invoiceId}</td>
-                <td className="px-4 py-3 border-b border-gray-200">{payment.clientName}</td>
-                <td className="px-4 py-3 border-b border-gray-200 dir-ltr text-left">{payment.amount.toFixed(2)} د.م</td>
-                <td className="px-4 py-3 border-b border-gray-200">{payment.paymentDate}</td>
-                <td className="px-4 py-3 border-b border-gray-200">
-                  <span className={TYPE_BADGES[payment.type]}>
-                    {getTypeInArabic(payment.type)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 border-b border-gray-200">
-                  <span className={STATUS_BADGES[payment.status]}>
-                    {getStatusInArabic(payment.status)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 border-b border-gray-200">{payment.caseReference}</td>
-                <td className="px-4 py-3 border-b border-gray-200">
-                  <span className="inline-block max-w-xs overflow-hidden text-ellipsis whitespace-nowrap" title={payment.notes}>
-                    {payment.notes}
-                  </span>
-                </td>
-                <td className="px-4 py-3 border-b border-gray-200 whitespace-nowrap">
-                  <div className="flex items-center space-x-3 space-x-reverse">
-                    {/* عرض */}
-                    <button className="text-blue-600 hover:text-blue-900" title="عرض التفاصيل">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        )}
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">العميل</th>
+                <th className="px-4 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">الملف</th>
+                <th className="px-4 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">الفاتورة</th>
+                <th className="px-4 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">المبلغ</th>
+                <th className="px-4 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">طريقة الدفع</th>
+                <th className="px-4 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">تاريخ الدفع</th>
+                <th className="px-4 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">الحالة</th>
+                <th className="px-4 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="px-4 py-4 text-center text-gray-500">
+                    <div className="flex justify-center">
+                      <svg className="w-5 h-5 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                    </button>
-                    {/* تحرير */}
-                    <button className="text-yellow-600 hover:text-yellow-900" title="تعديل">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    {/* طباعة إيصال */}
-                    <button className="text-green-600 hover:text-green-900" title="طباعة إيصال">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                      </svg>
-                    </button>
-                    {/* إلغاء / استرداد */}
-                    {payment.status === 'completed' && (
-                      <button className="text-red-600 hover:text-red-900" title="إلغاء الدفع">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="px-4 py-4 text-center text-gray-500">
+                    لم يتم العثور على مدفوعات
+                  </td>
+                </tr>
+              ) : (
+                filteredPayments.map((payment) => (
+                  <tr key={payment.idPaiement} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                      {payment.clientNom}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                      {payment.dossierReference}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                      {payment.factureNumero}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                      {payment.montant} {payment.devise}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                      {methodesPayment.find(m => m.id === payment.methode)?.name || payment.methode}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                      {new Date(payment.datePaiement).toLocaleDateString('ar-MA')}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        ${payment.statut === 'ACTIF' ? 'bg-green-100 text-green-800' : 
+                          payment.statut === 'EN_ATTENTE' ? 'bg-yellow-100 text-yellow-800' : 
+                          'bg-red-100 text-red-800'}`}>
+                        {statuts.find(s => s.id === payment.statut)?.name || payment.statut}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-center text-gray-900 whitespace-nowrap">
+                      <button
+                        className="mx-1 text-blue-600 hover:text-blue-900"
+                        onClick={() => handleEdit(payment)}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                       </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            )) : (
-              <tr className="text-sm text-gray-700">
-                <td colSpan="9" className="px-4 py-6 text-center text-gray-500 border-b border-gray-200">
-                  لم يتم العثور على مدفوعات مطابقة للبحث
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                      <button
+                        className="mx-1 text-red-600 hover:text-red-900"
+                        onClick={() => handleDelete(payment.idPaiement)}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-      
-      {/* ترقيم الصفحات */}
-      {filteredPayments.length > 0 && (
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-gray-600">
-            عرض <span className="font-medium">{filteredPayments.length}</span> من أصل <span className="font-medium">{payments.length}</span> مدفوعة
-          </div>
-          <div className="flex space-x-1 space-x-reverse">
-            <button className="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">
-              السابق
-            </button>
-            <button className="px-3 py-1 text-sm text-white bg-blue-600 border border-blue-600 rounded-md">
-              1
-            </button>
-            <button className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-              2
-            </button>
-            <button className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-              التالي
-            </button>
+
+      {/* نموذج إضافة/تعديل دفعة */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block overflow-hidden text-right align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
+                <h3 className="mb-4 text-lg font-medium leading-6 text-gray-900">
+                  {currentPayment ? 'تعديل دفعة' : 'إضافة دفعة جديدة'}
+                </h3>
+                <form>
+                  <div className="grid grid-cols-1 gap-y-4">
+                    {/* العميل */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">العميل</label>
+                      <select
+                        name="clientId"
+                        value={newPayment.clientId}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        required
+                      >
+                        <option value="">-- اختر العميل --</option>
+                        {clients.map(client => (
+                          <option key={client.id} value={client.id}>{client.nom}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* الملف */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">الملف</label>
+                      <select
+                        name="dossierId"
+                        value={newPayment.dossierId}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        required
+                      >
+                        <option value="">-- اختر الملف --</option>
+                        {dossiers
+                          .filter(dossier => !newPayment.clientId || dossier.client?.id === parseInt(newPayment.clientId))
+                          .map(dossier => (
+                            <option key={dossier.id} value={dossier.id}>{dossier.reference}</option>
+                          ))
+                        }
+                      </select>
+                    </div>
+                    
+                    {/* الفاتورة */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">الفاتورة</label>
+                      <select
+                        name="factureId"
+                        value={newPayment.factureId}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        required
+                      >
+                        <option value="">-- اختر الفاتورة --</option>
+                        {factures
+                          .filter(facture => !newPayment.dossierId || facture.dossier?.id === parseInt(newPayment.dossierId))
+                          .map(facture => (
+                            <option key={facture.id} value={facture.id}>{facture.numero}</option>
+                          ))
+                        }
+                      </select>
+                    </div>
+                    
+                    {/* المبلغ والعملة */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">المبلغ</label>
+                        <input
+                          type="number"
+                          name="montant"
+                          value={newPayment.montant}
+                          onChange={handleInputChange}
+                          className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          required
+                          step="0.01"
+                          min="0"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">العملة</label>
+                        <select
+                          name="devise"
+                          value={newPayment.devise}
+                          onChange={handleInputChange}
+                          className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        >
+                          {devises.map(d => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    {/* طريقة الدفع وتاريخ الدفع */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">طريقة الدفع</label>
+                        <select
+                          name="methode"
+                          value={newPayment.methode}
+                          onChange={handleInputChange}
+                          className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        >
+                          {methodesPayment.map(m => (
+                            <option key={m.id} value={m.id}>{m.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">تاريخ الدفع</label>
+                        <input
+                          type="date"
+                          name="datePaiement"
+                          value={newPayment.datePaiement}
+                          onChange={handleInputChange}
+                          className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* مرجع الدفع والبنك */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">مرجع الدفع</label>
+                        <input
+                          type="text"
+                          name="numeroReference"
+                          value={newPayment.numeroReference}
+                          onChange={handleInputChange}
+                          className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">البنك</label>
+                        <input
+                          type="text"
+                          name="banqueReference"
+                          value={newPayment.banqueReference}
+                          onChange={handleInputChange}
+                          className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* حالة الدفع */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">حالة الدفع</label>
+                      <select
+                        name="statut"
+                        value={newPayment.statut}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      >
+                        {statuts.map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* ملاحظات */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">ملاحظات</label>
+                      <textarea
+                        name="notes"
+                        value={newPayment.notes}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        rows="3"
+                      ></textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div className="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={handleSavePayment}
+                  className="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  {currentPayment ? 'تعديل' : 'إضافة'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="inline-flex justify-center w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

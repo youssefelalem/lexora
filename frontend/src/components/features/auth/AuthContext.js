@@ -80,7 +80,10 @@ export const AuthProvider = ({ children }) => {
 
   // Function to update user data in context after profile update
   const updateUserInContext = (userData) => {
-    setUser(userData);
+    // Only update if userData is different from current user
+    if (JSON.stringify(userData) !== JSON.stringify(user)) {
+      setUser(userData);
+    }
   };
 
   // Crée l'objet de valeur à passer au contexte

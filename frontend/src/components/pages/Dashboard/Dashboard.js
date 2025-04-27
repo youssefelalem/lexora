@@ -8,7 +8,7 @@ const Dashboard = () => {
       {/* القسم الأول - ملخص الإحصائيات */}
       <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4">
         {/* بطاقة إحصائية - القضايا النشطة */}
-        <div className="p-4 bg-blue-50 border-r-4 border-blue-500 rounded-lg shadow-sm">
+        <div className="p-4 border-r-4 border-blue-500 rounded-lg shadow-sm bg-blue-50">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-blue-600">القضايا النشطة</p>
@@ -24,7 +24,7 @@ const Dashboard = () => {
         </div>
 
         {/* بطاقة إحصائية - العملاء الجدد */}
-        <div className="p-4 bg-green-50 border-r-4 border-green-500 rounded-lg shadow-sm">
+        <div className="p-4 border-r-4 border-green-500 rounded-lg shadow-sm bg-green-50">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-green-600">العملاء الجدد</p>
@@ -40,7 +40,7 @@ const Dashboard = () => {
         </div>
 
         {/* بطاقة إحصائية - الفواتير المدفوعة */}
-        <div className="p-4 bg-purple-50 border-r-4 border-purple-500 rounded-lg shadow-sm">
+        <div className="p-4 border-r-4 border-purple-500 rounded-lg shadow-sm bg-purple-50">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-purple-600">الفواتير المدفوعة</p>
@@ -48,7 +48,7 @@ const Dashboard = () => {
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 0 012 2" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
           </div>
@@ -56,13 +56,13 @@ const Dashboard = () => {
         </div>
 
         {/* بطاقة إحصائية - الجلسات القادمة */}
-        <div className="p-4 bg-amber-50 border-r-4 border-amber-500 rounded-lg shadow-sm">
+        <div className="p-4 border-r-4 rounded-lg shadow-sm bg-amber-50 border-amber-500">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-amber-600">الجلسات القادمة</p>
               <h2 className="mt-2 text-3xl font-bold text-gray-800">7</h2>
             </div>
-            <div className="p-3 bg-amber-100 rounded-full">
+            <div className="p-3 rounded-full bg-amber-100">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -86,7 +86,7 @@ const Dashboard = () => {
           </div>
           <div className="h-64 overflow-hidden">
             {/* هنا يمكن إضافة مكتبة رسوم بيانية مثل Chart.js أو Recharts */}
-            <div className="flex items-end justify-around h-full mb-2 pt-10 px-4">
+            <div className="flex items-end justify-around h-full px-4 pt-10 mb-2">
               <div className="flex flex-col items-center">
                 <div className="w-8 bg-blue-500 rounded-t" style={{ height: '40%' }}></div>
                 <span className="mt-1 text-xs">يناير</span>
@@ -143,7 +143,7 @@ const Dashboard = () => {
             <div className="p-3 bg-white border border-gray-200 rounded-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <input type="checkbox" className="ml-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                  <input type="checkbox" className="w-4 h-4 ml-2 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                   <span className="text-sm font-medium text-gray-700">تحضير جلسة قضية أحمد محمد</span>
                 </div>
                 <span className="text-xs text-red-500">اليوم</span>
@@ -152,7 +152,7 @@ const Dashboard = () => {
             <div className="p-3 bg-white border border-gray-200 rounded-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <input type="checkbox" className="ml-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                  <input type="checkbox" className="w-4 h-4 ml-2 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                   <span className="text-sm font-medium text-gray-700">إرسال فاتورة للعميل سارة أحمد</span>
                 </div>
                 <span className="text-xs text-amber-500">غداً</span>
@@ -161,7 +161,7 @@ const Dashboard = () => {
             <div className="p-3 bg-white border border-gray-200 rounded-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <input type="checkbox" className="ml-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                  <input type="checkbox" className="w-4 h-4 ml-2 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                   <span className="text-sm font-medium text-gray-700">مراجعة مستندات القضية رقم #134</span>
                 </div>
                 <span className="text-xs text-gray-500">26 أبريل</span>
@@ -170,7 +170,7 @@ const Dashboard = () => {
             <div className="p-3 bg-white border border-gray-200 rounded-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <input type="checkbox" className="ml-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                  <input type="checkbox" className="w-4 h-4 ml-2 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                   <span className="text-sm font-medium text-gray-700">الاجتماع مع فريق العمل</span>
                 </div>
                 <span className="text-xs text-gray-500">28 أبريل</span>
@@ -179,7 +179,7 @@ const Dashboard = () => {
             <div className="p-3 bg-white border border-gray-200 rounded-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <input type="checkbox" className="ml-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                  <input type="checkbox" className="w-4 h-4 ml-2 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                   <span className="text-sm font-medium text-gray-700">تحضير تقرير شهري</span>
                 </div>
                 <span className="text-xs text-gray-500">30 أبريل</span>
@@ -228,7 +228,7 @@ const Dashboard = () => {
               <div className="flex-shrink-0 mt-1">
                 <div className="flex items-center justify-center w-8 h-8 text-white bg-purple-500 rounded-full">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 0 012 2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
               </div>
@@ -239,7 +239,7 @@ const Dashboard = () => {
             </div>
             <div className="flex">
               <div className="flex-shrink-0 mt-1">
-                <div className="flex items-center justify-center w-8 h-8 text-white bg-amber-500 rounded-full">
+                <div className="flex items-center justify-center w-8 h-8 text-white rounded-full bg-amber-500">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -263,16 +263,16 @@ const Dashboard = () => {
             <div className="p-3 bg-white border-r-4 border-red-500 rounded-md shadow-sm">
               <p className="text-sm font-medium text-gray-700">جلسة قضية أحمد محمد - محكمة الأسرة</p>
               <div className="flex items-center mt-2 text-xs text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>اليوم 11:00 صباحاً</span>
               </div>
             </div>
-            <div className="p-3 bg-white border-r-4 border-amber-500 rounded-md shadow-sm">
+            <div className="p-3 bg-white border-r-4 rounded-md shadow-sm border-amber-500">
               <p className="text-sm font-medium text-gray-700">جلسة استماع - قضية شركة السلام</p>
               <div className="flex items-center mt-2 text-xs text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>اليوم 2:30 مساءً</span>
@@ -281,7 +281,7 @@ const Dashboard = () => {
             <div className="p-3 bg-white border-r-4 border-blue-500 rounded-md shadow-sm">
               <p className="text-sm font-medium text-gray-700">جلسة تحكيم - نزاع تجاري</p>
               <div className="flex items-center mt-2 text-xs text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>غداً 10:00 صباحاً</span>
@@ -290,7 +290,7 @@ const Dashboard = () => {
             <div className="p-3 bg-white border-r-4 border-gray-400 rounded-md shadow-sm">
               <p className="text-sm font-medium text-gray-700">اجتماع مع العميل سامي خالد</p>
               <div className="flex items-center mt-2 text-xs text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>غداً 3:15 مساءً</span>
@@ -299,7 +299,7 @@ const Dashboard = () => {
             <div className="p-3 bg-white border-r-4 border-purple-500 rounded-md shadow-sm">
               <p className="text-sm font-medium text-gray-700">جلسة محكمة - قضية العقارات</p>
               <div className="flex items-center mt-2 text-xs text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>27 أبريل 9:30 صباحاً</span>

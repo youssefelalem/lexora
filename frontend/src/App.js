@@ -5,6 +5,14 @@ import Sidebar from './components/common/Sidebar/Sidebar';
 import MainContainer from './components/pages/MainContainer/MainContainer';
 import Login from './components/features/auth/Login';
 
+// Define React Router v7 future flags
+const routerOptions = {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true
+  }
+};
+
 // مكون للتحقق من المصادقة
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
@@ -25,7 +33,7 @@ function AppLayout() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router future={routerOptions.future}>
         <div dir="rtl" className="min-h-screen"> {/* Setting RTL direction for Arabic language */}
           <Routes>
             <Route path="/login" element={<Login />} />

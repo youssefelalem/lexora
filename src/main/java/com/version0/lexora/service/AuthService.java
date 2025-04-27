@@ -2,19 +2,23 @@ package com.version0.lexora.service; // تعريف الحزمة // Déclaration 
 
 // استيراد الكلاسات الضرورية // Importation des classes nécessaires
 import com.version0.lexora.model.Utilisateur; // استيراد نموذج المستخدم المعاد تسميته // Importation du modèle utilisateur renommé
+import com.version0.lexora.model.Role; // استيراد نموذج الدور // Importation du modèle Role
 import com.version0.lexora.repository.UserRepository; // استيراد مستودع المستخدم // Importation du repository utilisateur
+import com.version0.lexora.security.JwtProperties; // استيراد خصائص JWT // Importation des propriétés JWT
 import org.springframework.security.crypto.password.PasswordEncoder; // استيراد مشفر كلمات المرور // Importation de l'encodeur de mot de passe
 import org.springframework.stereotype.Service; // استيراد التعليق التوضيحي للخدمة // Importation de l'annotation Service
 import org.springframework.transaction.annotation.Transactional; // استيراد التعليق التوضيحي للمعاملات // Importation de l'annotation Transactional
 import io.jsonwebtoken.Jwts; // استيراد مكتبة JWT // Importation de la bibliothèque JWT
-import io.jsonwebtoken.SignatureAlgorithm; // استيراد خوارزمية التوقيع // Importation de l'algorithme de signature
 import io.jsonwebtoken.security.Keys; // استيراد أدوات المفاتيح // Importation des utilitaires de clés
 import java.security.Key; // استيراد واجهة المفتاح // Importation de l'interface Key
+import java.time.LocalDate; // استيراد LocalDate للتعامل مع التواريخ
 import java.util.Date; // استيراد كلاس التاريخ // Importation de la classe Date
 import java.util.HashMap; // استيراد HashMap // Importation de HashMap
+import java.util.List;
 import java.util.Map; // استيراد واجهة Map // Importation de l'interface Map
 import java.util.Optional; // استيراد Optional // Importation de Optional
 import jakarta.persistence.EntityNotFoundException; // استيراد لمعالجة حالة عدم العثور على المستخدم
+import java.nio.charset.StandardCharsets; // استيراد للتعامل مع الترميز // Importation pour gérer l'encodage
 
 /**
  * خدمة المصادقة - تتعامل مع منطق تسجيل المستخدمين وتسجيل الدخول // Service d'authentification - gère la logique d'inscription et de connexion des utilisateurs
@@ -24,17 +28,111 @@ import jakarta.persistence.EntityNotFoundException; // استيراد لمعال
 public class AuthService {
     private final UserRepository userRepository; // مستودع المستخدمين // Repository des utilisateurs
     private final PasswordEncoder passwordEncoder; // مشفر كلمات المرور // Encodeur de mot de passe
-    // إنشاء مفتاح آمن لتوقيع رموز JWT // Création d'une clé sécurisée pour signer les tokens JWT
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final JwtProperties jwtProperties; // خصائص JWT // Propriétés JWT
+    
+    // مفتاح سري لتوقيع وتحقق من رموز JWT // Clé secrète pour signer et vérifier les tokens JWT
+    private final Key key;
 
     /**
      * منشئ الخدمة - يتم حقن مستودع المستخدمين ومشفر كلمات المرور // Constructeur du service - injection du repository utilisateur et de l'encodeur de mot de passe
      * @param userRepository مستودع المستخدمين للتعامل مع قاعدة البيانات // userRepository: Repository utilisateur pour interagir avec la base de données
      * @param passwordEncoder مشفر كلمات المرور لتأمين كلمات المرور // passwordEncoder: Encodeur pour sécuriser les mots de passe
+     * @param jwtProperties خصائص JWT للتكوين // jwtProperties: Propriétés JWT pour la configuration
      */
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtProperties jwtProperties) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtProperties = jwtProperties;
+        
+        // إنشاء المفتاح من السلسلة السرية المكونة // Créer la clé à partir de la chaîne secrète configurée
+        this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * تسجيل مستخدم جديد مع بيانات إضافية // Enregistrer un nouvel utilisateur avec des données supplémentaires
+     * @param email البريد الإلكتروني للمستخدم // email: L'email de l'utilisateur
+     * @param password كلمة المرور (سيتم تشفيرها) // password: Le mot de passe (sera haché)
+     * @param name اسم المستخدم // name: Le nom de l'utilisateur
+     * @param userData خريطة تحتوي على البيانات الإضافية للمستخدم // userData: Map contenant les données supplémentaires de l'utilisateur
+     * @return كائن المستخدم المسجل // @return L'objet Utilisateur enregistré
+     * @throws RuntimeException إذا كان البريد الإلكتروني مستخدم بالفعل // @throws RuntimeException si l'email est déjà utilisé
+     */
+    @Transactional // يضمن أن العملية تتم كوحدة واحدة (إما تنجح كلها أو تفشل كلها) // Assure que l'opération est atomique
+    public Utilisateur registerWithDetails(String email, String password, String name, Map<String, Object> userData) {
+        // التحقق مما إذا كان البريد الإلكتروني موجودًا بالفعل // Vérifier si l'email existe déjà
+        Optional<Utilisateur> existingUser = userRepository.findByEmail(email);
+        if (existingUser.isPresent()) {
+            throw new RuntimeException("البريد الإلكتروني مستخدم بالفعل"); // Email déjà utilisé
+        }
+
+        // إنشاء كائن مستخدم جديد // Créer un nouvel objet Utilisateur
+        Utilisateur utilisateur = new Utilisateur();
+        
+        // تعيين البيانات الأساسية // Définir les données de base
+        utilisateur.setEmail(email);
+        utilisateur.setMotDePasseHash(passwordEncoder.encode(password));
+        
+        // تقسيم الاسم إذا كان يحتوي على مسافة // Diviser le nom s'il contient un espace
+        if (name != null && name.contains(" ")) {
+            String[] nameParts = name.trim().split(" ", 2);
+            utilisateur.setPrenom(nameParts[0]);
+            utilisateur.setNom(nameParts[1]);
+        } else {
+            utilisateur.setNom(name);
+        }
+        
+        // تعيين البيانات الإضافية إذا كانت موجودة // Définir les données supplémentaires si présentes
+        if (userData != null) {
+            // تعيين الدور إذا كان موجودًا // Définir le rôle s'il est présent
+            if (userData.containsKey("role")) {
+                try {
+                    String roleStr = userData.get("role").toString().toUpperCase();
+                    utilisateur.setRole(Role.valueOf(roleStr));
+                } catch (Exception e) {
+                    // إذا كان الدور غير صالح، استخدم القيمة الافتراضية // Si le rôle est invalide, utiliser la valeur par défaut
+                    utilisateur.setRole(Role.AVOCAT);
+                }
+            } else {
+                // تعيين الدور الافتراضي // Définir le rôle par défaut
+                utilisateur.setRole(Role.AVOCAT);
+            }
+            
+            // تعيين رقم الهاتف إذا كان موجودًا // Définir le numéro de téléphone s'il est présent
+            if (userData.containsKey("telephone")) {
+                utilisateur.setTelephone((String) userData.get("telephone"));
+            }
+            
+            // تعيين العنوان إذا كان موجودًا // Définir l'adresse si elle est présente
+            if (userData.containsKey("adresse")) {
+                utilisateur.setAdresse((String) userData.get("adresse"));
+            }
+            
+            // تعيين تاريخ الميلاد إذا كان موجودًا // Définir la date de naissance si elle est présente
+            if (userData.containsKey("dateNaissance") && userData.get("dateNaissance") != null) {
+                try {
+                    LocalDate birthDate = LocalDate.parse(userData.get("dateNaissance").toString());
+                    utilisateur.setDateNaissance(birthDate);
+                } catch (Exception e) {
+                    System.err.println("خطأ في تحويل تاريخ الميلاد: " + e.getMessage());
+                }
+            }
+            
+            // تعيين حالة النشاط إذا كانت موجودة، وإلا استخدم true كافتراضي
+            // Définir l'état actif s'il est présent, sinon utiliser true par défaut
+            if (userData.containsKey("estActive")) {
+                utilisateur.setEstActive((Boolean) userData.get("estActive"));
+            } else {
+                utilisateur.setEstActive(true);
+            }
+        } else {
+            // تعيين القيم الافتراضية إذا لم يتم توفير بيانات إضافية
+            // Définir les valeurs par défaut si aucune donnée supplémentaire n'est fournie
+            utilisateur.setRole(Role.AVOCAT);
+            utilisateur.setEstActive(true);
+        }
+
+        // حفظ المستخدم في قاعدة البيانات // Sauvegarder l'utilisateur dans la base de données
+        return userRepository.save(utilisateur);
     }
 
     /**
@@ -45,24 +143,11 @@ public class AuthService {
      * @return كائن المستخدم المسجل // @return L'objet Utilisateur enregistré
      * @throws RuntimeException إذا كان البريد الإلكتروني مستخدم بالفعل // @throws RuntimeException si l'email est déjà utilisé
      */
-    @Transactional // يضمن أن العملية تتم كوحدة واحدة (إما تنجح كلها أو تفشل كلها) // Assure que l'opération est atomique (tout réussit ou tout échoue)
+    @Transactional // يضمن أن العملية تتم كوحدة واحدة (إما تنجح كلها أو تفشل كلها) // Assure que l'opération est atomique
     public Utilisateur register(String email, String password, String name) {
-        // التحقق مما إذا كان البريد الإلكتروني موجودًا بالفعل // Vérifier si l'email existe déjà
-        Optional<Utilisateur> existingUser = userRepository.findByEmail(email);
-        if (existingUser.isPresent()) {
-            throw new RuntimeException("البريد الإلكتروني مستخدم بالفعل"); // Email déjà utilisé
-        }
-
-        // إنشاء كائن مستخدم جديد // Créer un nouvel objet Utilisateur
-        Utilisateur utilisateur = new Utilisateur();
-        utilisateur.setNom(name); // تعيين الاسم // Définir le nom
-        utilisateur.setEmail(email); // تعيين البريد الإلكتروني // Définir l'email
-        // تشفير كلمة المرور قبل حفظها // Hacher le mot de passe avant de le sauvegarder
-        utilisateur.setMotDePasseHash(passwordEncoder.encode(password)); // استخدام Setter الصحيح // Utilisation du setter correct
-        utilisateur.setEstActive(true); // تعيين المستخدم كنشط افتراضيًا // Définir l'utilisateur comme actif par défaut
-
-        // حفظ المستخدم في قاعدة البيانات // Sauvegarder l'utilisateur dans la base de données
-        return userRepository.save(utilisateur);
+        // استخدام طريقة التسجيل مع البيانات الإضافية بدون بيانات إضافية
+        // Utiliser la méthode d'enregistrement avec des données supplémentaires sans fournir de données supplémentaires
+        return registerWithDetails(email, password, name, null);
     }
 
     /**
@@ -83,11 +168,14 @@ public class AuthService {
             throw new RuntimeException("البريد الإلكتروني أو كلمة المرور غير صحيحة"); // Email ou mot de passe incorrect
         }
 
-        // إذا كان المستخدم غير نشط، قم بتنشيطه وحفظ التغيير // If the user is inactive, activate and save the change
+        // التحقق من أن الحساب نشط // Vérifier que le compte est actif
         if (!utilisateur.getEstActive()) {
-            utilisateur.setEstActive(true);
-            userRepository.save(utilisateur); // حفظ التغيير
+            throw new RuntimeException("حساب المستخدم غير نشط. الرجاء التواصل مع المسؤول"); // Le compte utilisateur est inactif. Veuillez contacter l'administrateur
         }
+
+        // تحديث آخر تسجيل دخول للمستخدم // Mettre à jour la dernière connexion de l'utilisateur
+        utilisateur.mettreAJourDerniereConnexion();
+        userRepository.save(utilisateur);
 
         // إنشاء رمز JWT للمستخدم المصادق عليه // Générer un token JWT pour l'utilisateur authentifié
         String token = generateToken(utilisateur);
@@ -99,7 +187,9 @@ public class AuthService {
         response.put("user", Map.of(
             "id", utilisateur.getIdUtilisateur(), // استخدام Getter الصحيح // Utilisation du getter correct
             "nom", utilisateur.getNom(),       // استخدام Getter الصحيح // Utilisation du getter correct
-            "email", utilisateur.getEmail()
+            "prenom", utilisateur.getPrenom(),  // إضافة الاسم الأول
+            "email", utilisateur.getEmail(),
+            "role", utilisateur.getRole().name() // إضافة الدور
         ));
 
         return response; // إرجاع الاستجابة // Retourner la réponse
@@ -115,8 +205,12 @@ public class AuthService {
         return Jwts.builder()
             .setSubject(utilisateur.getEmail()) // تعيين موضوع الرمز (البريد الإلكتروني) // Définir le sujet du token (l'email)
             .setIssuedAt(new Date()) // تعيين وقت الإصدار // Définir l'heure d'émission
-            // تعيين وقت انتهاء الصلاحية (هنا 24 ساعة) // Définir l'heure d'expiration (ici 24 heures)
-            .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+            // تعيين وقت انتهاء الصلاحية حسب التكوين // Définir l'heure d'expiration selon la configuration
+            .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration()))
+            // إضافة بعض المطالبات المخصصة // Ajouter des revendications personnalisées
+            .claim("userId", utilisateur.getIdUtilisateur().toString())
+            .claim("role", utilisateur.getRole().name())
+            .claim("name", utilisateur.getNomComplet())
             .signWith(key) // توقيع الرمز بالمفتاح السري // Signer le token avec la clé secrète
             .compact(); // بناء الرمز كسلسلة نصية // Construire le token sous forme de chaîne
     }
@@ -148,6 +242,56 @@ public class AuthService {
     }
 
     /**
+     * استخراج بيانات المستخدم الحالي من رمز JWT
+     * Extract current user data from JWT token
+     *
+     * @param token رمز JWT المراد فك تشفيره واسترداد البيانات منه
+     * @return خريطة تحتوي على بيانات المستخدم الحالي
+     * @throws RuntimeException إذا كان الرمز غير صالح أو المستخدم غير موجود
+     */
+    public Map<String, Object> getCurrentUserFromToken(String token) {
+        try {
+            // تحليل الرمز واستخراج المطالبات (Claims)
+            var claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+            
+            // استخراج البريد الإلكتروني (الموضوع) من الرمز
+            String email = claims.getSubject();
+            
+            // البحث عن المستخدم بواسطة البريد الإلكتروني
+            Utilisateur utilisateur = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("المستخدم المرتبط بهذا الرمز غير موجود"));
+            
+            // التحقق من حالة المستخدم (إذا كان غير نشط، رفض الطلب)
+            if (!utilisateur.getEstActive()) {
+                throw new RuntimeException("حساب المستخدم غير نشط. يرجى الاتصال بالمسؤول");
+            }
+            
+            // بناء كائن استجابة يحتوي على بيانات المستخدم
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", utilisateur.getIdUtilisateur());
+            userData.put("email", utilisateur.getEmail());
+            userData.put("nom", utilisateur.getNom());
+            userData.put("prenom", utilisateur.getPrenom());
+            userData.put("nomComplet", utilisateur.getNomComplet());
+            userData.put("role", utilisateur.getRole().name());
+            userData.put("telephone", utilisateur.getTelephone());
+            userData.put("adresse", utilisateur.getAdresse());
+            userData.put("avatar", utilisateur.getAvatar());
+            userData.put("dateNaissance", utilisateur.getDateNaissance());
+            userData.put("estActive", utilisateur.getEstActive());
+            userData.put("derniereConnexion", utilisateur.getDerniereConnexion());
+            
+            return userData;
+        } catch (Exception e) {
+            throw new RuntimeException("رمز الدخول غير صالح أو منتهي الصلاحية: " + e.getMessage());
+        }
+    }
+
+    /**
      * تحديث حالة النشاط لمستخدم معين.
      * Update the active status of a specific user.
      *
@@ -166,5 +310,130 @@ public class AuthService {
         user.setEstActive(isActive);
         // 3. حفظ المستخدم المحدث // Save the updated user
         return userRepository.save(user);
+    }
+    
+    /**
+     * تغيير كلمة المرور لمستخدم معين
+     * Change password for a specific user
+     *
+     * @param userId معرف المستخدم
+     * @param oldPassword كلمة المرور القديمة
+     * @param newPassword كلمة المرور الجديدة
+     * @return المستخدم المحدث
+     * @throws RuntimeException إذا كانت كلمة المرور القديمة غير صحيحة
+     */
+    @Transactional
+    public Utilisateur changePassword(Long userId, String oldPassword, String newPassword) {
+        Utilisateur user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("المستخدم غير موجود"));
+        
+        // التحقق من كلمة المرور القديمة
+        if (!passwordEncoder.matches(oldPassword, user.getMotDePasseHash())) {
+            throw new RuntimeException("كلمة المرور الحالية غير صحيحة");
+        }
+        
+        // تشفير وتعيين كلمة المرور الجديدة
+        user.setMotDePasseHash(passwordEncoder.encode(newPassword));
+        
+        // إعادة تعيين عداد محاولات تسجيل الدخول الفاشلة
+        user.reinitialiserTentativesConnexion();
+        
+        return userRepository.save(user);
+    }
+
+    /**
+     * الحصول على معلومات مستخدم محدد عن طريق المعرف
+     * Get user information by ID
+     *
+     * @param id معرف المستخدم
+     * @return المستخدم
+     * @throws EntityNotFoundException إذا لم يتم العثور على المستخدم
+     */
+    public Utilisateur getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("لم يتم العثور على المستخدم بالمعرف: " + id));
+    }
+
+    /**
+     * تحديث بيانات الملف الشخصي للمستخدم
+     * Update user profile data
+     *
+     * @param id معرف المستخدم
+     * @param userData خريطة تحتوي على البيانات المراد تحديثها
+     * @return المستخدم بعد التحديث
+     * @throws EntityNotFoundException إذا لم يتم العثور على المستخدم
+     */
+    public Utilisateur updateUserProfile(Long id, Map<String, Object> userData) {
+        Utilisateur existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("لم يتم العثور على المستخدم بالمعرف: " + id));
+        
+        // تحديث البيانات القابلة للتعديل فقط باستخدام Map
+        if (userData.containsKey("prenom") && userData.get("prenom") != null) {
+            existingUser.setPrenom((String) userData.get("prenom"));
+        }
+        if (userData.containsKey("nom") && userData.get("nom") != null) {
+            existingUser.setNom((String) userData.get("nom"));
+        }
+        if (userData.containsKey("telephone")) {
+            existingUser.setTelephone((String) userData.get("telephone"));
+        }
+        if (userData.containsKey("adresse")) {
+            existingUser.setAdresse((String) userData.get("adresse"));
+        }
+        if (userData.containsKey("avatar")) {
+            existingUser.setAvatar((String) userData.get("avatar"));
+        }
+        
+        // معالجة خاصة لتاريخ الميلاد
+        if (userData.containsKey("dateNaissance")) {
+            Object dateValue = userData.get("dateNaissance");
+            if (dateValue != null && !dateValue.toString().isEmpty()) {
+                try {
+                    LocalDate date = LocalDate.parse(dateValue.toString());
+                    existingUser.setDateNaissance(date);
+                } catch (Exception e) {
+                    System.err.println("خطأ في تحويل تاريخ الميلاد: " + e.getMessage());
+                    // لا نقوم بتحديث التاريخ إذا كان هناك خطأ في التحويل
+                }
+            } else {
+                existingUser.setDateNaissance(null);
+            }
+        }
+        
+        // لا تقم بتحديث البريد الإلكتروني أو كلمة المرور أو الصلاحيات هنا
+        
+        return userRepository.save(existingUser);
+    }
+
+    /**
+     * الحصول على قائمة جميع المستخدمين في النظام
+     * Get a list of all users in the system
+     *
+     * @return قائمة بجميع المستخدمين
+     */
+    public List<Utilisateur> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    /**
+     * حذف مستخدم من النظام
+     * Delete a user from the system
+     *
+     * @param id معرف المستخدم المراد حذفه
+     * @throws EntityNotFoundException إذا لم يتم العثور على المستخدم
+     * @throws IllegalStateException إذا كان المستخدم مرتبط بدوسييهات
+     */
+    @Transactional
+    public void deleteUser(Long id) {
+        Utilisateur utilisateur = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("لم يتم العثور على المستخدم بالمعرف: " + id));
+        
+        // قبل الحذف، تحقق مما إذا كان المستخدم مرتبط بدوسييهات
+        if (utilisateur.getDossiersResponsable() != null && !utilisateur.getDossiersResponsable().isEmpty()) {
+            throw new IllegalStateException("لا يمكن حذف المستخدم لأنه مرتبط بدوسييهات. قم بتعيين مسؤول آخر للدوسييهات أولًا.");
+        }
+        
+        // حذف المستخدم من قاعدة البيانات
+        userRepository.delete(utilisateur);
     }
 }

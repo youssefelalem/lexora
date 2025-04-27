@@ -22,13 +22,13 @@ const Login = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">تسجيل الدخول</h2>
-        {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+        <h2 className="mb-6 text-2xl font-bold text-center text-gray-800">تسجيل الدخول</h2>
+        {error && <div className="mb-4 text-center text-red-500">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-600 mb-2">البريد الإلكتروني</label>
+            <label className="block mb-2 text-gray-600">البريد الإلكتروني</label>
             <input
               type="email"
               value={email}
@@ -38,7 +38,7 @@ const Login = () => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-600 mb-2">كلمة المرور</label>
+            <label className="block mb-2 text-gray-600">كلمة المرور</label>
             <input
               type="password"
               value={password}
@@ -49,7 +49,7 @@ const Login = () => {
           </div>
           <button 
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 mt-4"
+            className="w-full px-4 py-2 mt-4 text-white transition duration-200 bg-blue-600 rounded-md hover:bg-blue-700"
           >
             تسجيل الدخول
           </button>

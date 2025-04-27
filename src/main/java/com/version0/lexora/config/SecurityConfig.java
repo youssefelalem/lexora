@@ -1,19 +1,27 @@
 package com.version0.lexora.config;
 
-import com.version0.lexora.model.Role; // استيراد الـ Enum Role
+import com.version0.lexora.model.Role;
+import com.version0.lexora.security.JwtAuthenticationFilter;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-// import org.springframework.http.HttpMethod; // قم بإلغاء التعليق إذا كنت بحاجة لتحديد طرق HTTP
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * تكوين الأمان - يحدد إعدادات Spring Security
@@ -21,8 +29,14 @@ import java.util.Arrays;
  */
 @Configuration
 @EnableWebSecurity
-// يمكنك إضافة @EnableMethodSecurity هنا إذا أردت استخدام @PreAuthorize في المستقبل
+@EnableMethodSecurity // تمكين الأمان على مستوى الطريقة، مثل @PreAuthorize
 public class SecurityConfig {
+    
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    
+    public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
 
     /**
      * تكوين سلسلة المرشحات الأمنية
@@ -35,18 +49,43 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // تكوين CORS
             .csrf(AbstractHttpConfigurer::disable) // تعطيل CSRF للواجهات البرمجية
+            // تكوين إدارة الجلسات: STATELESS يعني عدم حفظ حالة الجلسة (مناسب لـ JWT)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // تكوين قواعد التحكم في الوصول لطلبات HTTP
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // السماح بالوصول العام لنقاط نهاية المصادقة
-                // --- إضافة قواعد التحكم في الوصول بناءً على الأدوار ---
-                // مثال: نقاط النهاية الخاصة بالمسؤول فقط
-                .requestMatchers("/api/admin/**").hasRole(Role.ADMINISTRATEUR.name())
-                // مثال: نقاط النهاية التي يمكن للمساعد والمسؤول الوصول إليها
-                .requestMatchers("/api/data/**").hasAnyRole(Role.ASSISTANT_ADMIN.name(), Role.ADMINISTRATEUR.name())
-                // ----------------------------------------------------
-                .anyRequest().authenticated() // أي طلب آخر يتطلب تسجيل الدخول (أي دور)
+                // السماح بالوصول العام لنقاط نهاية المصادقة
+                .requestMatchers("/api/auth/**").permitAll()
+                // السماح لـ OPTIONS (مهم لـ CORS preflight)
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // تكوين الوصول استنادًا إلى الأدوار
+                .requestMatchers("/api/admin/**").hasRole(Role.SUPER_ADMIN.name())
+                .requestMatchers("/api/avocat/**").hasRole(Role.AVOCAT.name())
+                .requestMatchers("/api/clients/**").hasAnyRole(
+                    Role.ADMINISTRATEUR.name(), Role.AVOCAT.name(), Role.ASSISTANT_JURIDIQUE.name())
+                .requestMatchers("/api/dossiers/**").hasAnyRole(
+                    Role.ADMINISTRATEUR.name(), Role.AVOCAT.name(), Role.ASSISTANT_JURIDIQUE.name())
+                .requestMatchers("/api/factures/**").hasAnyRole(
+                    Role.ADMINISTRATEUR.name(), Role.AVOCAT.name(), Role.COMPTABLE.name())
+                .requestMatchers("/api/sessions/**").hasAnyRole(
+                    Role.ADMINISTRATEUR.name(), Role.AVOCAT.name(), Role.ASSISTANT_JURIDIQUE.name())
+                // أي طلب آخر يتطلب مصادقة
+                .anyRequest().authenticated()
+            )
+            // إضافة مرشح JWT قبل مرشح مصادقة اسم المستخدم وكلمة المرور
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            // إعداد معالجة الأخطاء
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(401);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"عذرا، يجب تسجيل الدخول للوصول إلى هذه الصفحة\"}");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(403);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"عذرا، ليس لديك الصلاحية للوصول إلى هذا المورد\"}");
+                })
             );
-            // .httpBasic(Customizer.withDefaults()); // Example: Enable HTTP Basic Auth
-            // Or configure JWT filter here later
 
         return http.build();
     }
@@ -58,14 +97,22 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow requests from any origin during development
-        // في مرحلة التطوير، نسمح بالطلبات من أي مصدر
-        // Pour le développement, nous autorisons les requêtes de toute origine
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // الطرق المسموح بها
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept",
-                "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers")); // السماح بجميع الرؤوس
-        configuration.setAllowCredentials(false); // Must be false if allowedOrigins contains "*"
+        // تعيين أصول محددة بدلاً من "*" للأمان
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://192.168.1.6:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization",
+            "Content-Type",
+            "X-Requested-With",
+            "Accept",
+            "Origin",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers"
+        ));
+        // السماح بإرسال الاعتمادات مع CORS (مثل ملفات تعريف الارتباط)
+        configuration.setAllowCredentials(true);
+        // مدة تخزين استجابة preflight في ذاكرة التخزين المؤقت (بالثواني)
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

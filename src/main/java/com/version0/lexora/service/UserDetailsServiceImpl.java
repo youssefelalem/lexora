@@ -34,9 +34,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // Vérifier si le compte est actif
         // Check if the account is active
         if (!utilisateur.getEstActive()) {
-            // Lancer une exception si le compte n'est pas actif
-            // Throw an exception if the account is not active
-            throw new DisabledException("User account is disabled");
+            // رمي استثناء بالعربية إذا كان الحساب غير نشط // Lancer une exception avec un message en arabe si le compte n'est pas actif
+            throw new DisabledException("حساب المستخدم غير نشط. الرجاء التواصل مع المسؤول"); // "User account is inactive. Please contact the administrator"
         }
 
         // بناء كائن UserDetails الذي يستخدمه Spring Security // Construction de l'objet UserDetails utilisé par Spring Security

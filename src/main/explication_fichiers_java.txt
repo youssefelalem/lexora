@@ -1,40 +1,283 @@
-شرح ملفات جافا في src/main/java/com/version0/lexora
-=====================================================
+@startuml Lexora System Backend Architecture
 
-يشرح هذا الملف الغرض الرئيسي لكل ملف جافا في بنية المشروع الخلفي (backend).
+' تعريف الألوان والأنماط
+skinparam backgroundColor #FEFEFE
+skinparam ArrowColor #666666
+skinparam classBorderColor #666666
+skinparam classFontSize 14
+skinparam classHeaderBackgroundColor #DFEBF5
+skinparam packageBackgroundColor #F0F8FF
 
-1.  **LexoraApplication.java**:
-    *   **الوظيفة:** نقطة الدخول الرئيسية لتطبيق Spring Boot. يحتوي على الطريقة `main` التي تبدأ تشغيل التطبيق بأكمله.
-    *   **الأهمية:** هو الملف الذي يتم تنفيذه لبدء تشغيل الخادم الخلفي.
+' تنظيم النماذج في حزمة
+package "model" {
+  enum Role {
+    +SUPER_ADMIN
+    +ADMINISTRATEUR
+    +AVOCAT
+    +ASSISTANT_JURIDIQUE
+    +COMPTABLE
+    +ASSISTANT_ADMIN
+    +INVITE
+  }
 
-2.  **config/SecurityConfig.java**:
-    *   **الوظيفة:** يقوم بتكوين وتخصيص Spring Security. يحدد كيفية التعامل مع المصادقة (authentication) والترخيص (authorization)، وكيفية تجزئة (hash) كلمات المرور، وما هي المسارات (URLs) التي تتطلب تسجيل الدخول.
-    *   **الأهمية:** مسؤول عن أمان التطبيق وحماية نقاط النهاية (API Endpoints).
+  class Utilisateur {
+    -Long idUtilisateur
+    -String prenom
+    -String nom
+    -String email
+    -String motDePasseHash
+    -Role role
+    -Boolean estActive
+  }
 
-3.  **controller/AuthController.java**:
-    *   **الوظيفة:** يعمل كواجهة بين طلبات الويب (HTTP requests) القادمة من الواجهة الأمامية (frontend) ومنطق الأعمال (business logic) في الخدمات. يستقبل الطلبات مثل تسجيل الدخول (`/login`)، والتسجيل (`/register`)، والحصول على بيانات المستخدم الحالي (`/me`)، ويوجهها إلى `AuthService` للمعالجة.
-    *   **الأهمية:** يحدد نقاط النهاية (API Endpoints) التي يمكن للواجهة الأمامية التفاعل معها للمصادقة.
+  class Client {
+    -Long idClient
+    -String nom
+    -String email
+    -String telephone
+    -String type
+    -String statut
+  }
 
-4.  **database/DatabaseConfig.java**:
-    *   **الوظيفة:** يحتوي على التكوين للاتصال اليدوي بقاعدة بيانات MySQL باستخدام JDBC. يتضمن دالة للحصول على اتصال (`getConnection`) ودالة لتهيئة قاعدة البيانات وإنشاء جدول المستخدمين (`initializeDatabase`) إذا لم يكن موجودًا.
-    *   **الأهمية:** يُستخدم لإنشاء قاعدة البيانات والجدول الأولي عند بدء تشغيل التطبيق لأول مرة أو في البيئات التي لا تستخدم التهيئة التلقائية لـ Spring Data JPA بالكامل. (ملاحظة: في تطبيقات Spring Boot الحديثة، غالبًا ما تتم إدارة إنشاء الجداول تلقائيًا بواسطة Spring Data JPA بناءً على ملف `application.properties` ونماذج `@Entity`).
+  class Dossier {
+    -Long idDossier
+    -String reference
+    -String titre
+    -String description
+    -String type
+    -String tribunal
+    -String statut
+    -String priorite
+  }
 
-5.  **model/Utilisateur.java, Avocat.java, Secretaire.java**:
-    *   **الوظيفة:** تمثل نماذج البيانات (Data Models) أو الكيانات (Entities) التي يتم تخزينها في قاعدة البيانات. `Utilisateur` هو الفئة الأساسية للمستخدم، بينما `Avocat` و `Secretaire` هما فئات فرعية ترث منها لتمثيل أنواع مختلفة من المستخدمين. تستخدم التعليقات التوضيحية (annotations) مثل `@Entity`, `@Table`, `@Column`, إلخ، لربط حقول الفئة بأعمدة الجدول في قاعدة البيانات.
-    *   **الأهمية:** تحدد بنية البيانات التي يتعامل معها التطبيق ويخزنها.
+  class Session {
+    -Long idSession
+    -LocalDate date
+    -LocalTime heure
+    -String salle
+    -String tribunal
+    -String statut
+  }
 
-6.  **repository/UserRepository.java**:
-    *   **الوظيفة:** واجهة تعمل كطبقة الوصول إلى البيانات (Data Access Layer) للكيان `Utilisateur`. باستخدام Spring Data JPA، توفر هذه الواجهة طرقًا جاهزة للاستخدام لتنفيذ عمليات قاعدة البيانات الأساسية (مثل الحفظ والبحث والحذف) دون الحاجة إلى كتابة استعلامات SQL يدويًا. تحتوي أيضًا على طريقة مخصصة (`findByEmail`) للبحث عن مستخدم عن طريق بريده الإلكتروني.
-    *   **الأهمية:** تبسط التفاعل مع قاعدة البيانات وتوفر طريقة موحدة لاسترداد وتخزين بيانات المستخدمين.
+  class Document {
+    -Long idDocument
+    -String nom
+    -String type
+    -String cheminFichier
+    -String statut
+  }
 
-7.  **security/**:
-    *   **الوظيفة:** هذا المجلد فارغ حاليًا، ولكنه مخصص عادةً لاحتواء الفئات المتعلقة بالأمان الإضافي، مثل مرشحات JWT (لمعالجة JSON Web Tokens) أو معالجات المصادقة المخصصة.
-    *   **الأهمية:** مكان لتنظيم كود الأمان المتقدم.
+  class Facture {
+    -Long idFacture
+    -String numero
+    -BigDecimal montantTotal
+    -BigDecimal montantPaye
+    -BigDecimal montantRestant
+    -String statut
+  }
 
-8.  **service/AuthService.java**:
-    *   **الوظيفة:** يحتوي على منطق الأعمال (Business Logic) الرئيسي لعمليات المصادقة. يتضمن وظائف لتسجيل مستخدم جديد (مع تجزئة كلمة المرور)، وتسجيل دخول مستخدم موجود (مع التحقق من كلمة المرور)، وإنشاء والتحقق من صحة JSON Web Tokens (JWT). يتفاعل مع `UserRepository` لاسترداد وتخزين بيانات المستخدم ومع `PasswordEncoder` لتجزئة كلمات المرور.
-    *   **الأهمية:** يفصل منطق المصادقة عن وحدة التحكم (Controller) والمستودع (Repository)، مما يجعل الكود أكثر تنظيمًا وقابلية للصيانة.
+  class ElementFacture {
+    -Long idElement
+    -String description
+    -Integer quantite
+    -BigDecimal prixUnitaire
+    -BigDecimal montant
+  }
 
-9.  **service/UserDetailsServiceImpl.java**:
-    *   **الوظيفة:** تنفيذ لواجهة `UserDetailsService` من Spring Security. وظيفتها هي تحميل بيانات مستخدم معين (بناءً على البريد الإلكتروني في هذه الحالة) من قاعدة البيانات (باستخدام `UserRepository`) وتوفيرها لـ Spring Security بتنسيق يفهمه (كائن `UserDetails`) لإكمال عملية المصادقة.
-    *   **الأهمية:** يربط آلية المصادقة في Spring Security بكيفية تخزين بيانات المستخدم في التطبيق.
+  class Paiement {
+    -Long idPaiement
+    -BigDecimal montant
+    -String methode
+    -LocalDate datePaiement
+    -String statut
+  }
+
+  class Notification {
+    -Long idNotification
+    -String titre
+    -String message
+    -Boolean lu
+    -String type
+  }
+
+  class Audit {
+    -Long idAudit
+    -String action
+    -String entite
+    -Long idEntite
+    -String description
+    -LocalDateTime dateAction
+  }
+
+  class Depense {
+    -Long idDepense
+    -String description
+    -BigDecimal montant
+    -String categorie
+    -String statut
+  }
+}
+
+' تنظيم المستودعات في حزمة
+package "repository" {
+  interface UserRepository {
+    +findByEmail(String email): Optional<Utilisateur>
+  }
+
+  interface ClientRepository {
+    +findByNomContainingIgnoreCase(String nom): List<Client>
+    +findByEmail(String email): Optional<Client>
+  }
+
+  interface DossierRepository {
+    +findByReference(String reference): Optional<Dossier>
+    +findByClient(Client client): List<Dossier>
+    +findByStatut(String statut): List<Dossier>
+    +findByType(String type): List<Dossier>
+  }
+
+  interface SessionRepository {}
+  interface DocumentRepository {}
+  interface FactureRepository {}
+  interface PaiementRepository {}
+  interface DepenseRepository {}
+}
+
+' تنظيم كائنات نقل البيانات في حزمة
+package "dto" {
+  class ClientDTO {
+    +Long idClient
+    +String nom
+    +String email
+    +String telephone
+    +String type
+    +String statut
+  }
+
+  class DossierDTO {
+    +Long idDossier
+    +String reference
+    +String titre
+    +Long clientId
+    +String clientNom
+    +String type
+    +String statut
+    +Integer nombreSessions
+    +Integer nombreDocuments
+  }
+
+  class SessionDTO {}
+  class DocumentDTO {}
+  class FactureDTO {}
+  class ElementFactureDTO {}
+  class PaiementDTO {}
+  class DepenseDTO {}
+}
+
+' تنظيم الخدمات في حزمة
+package "service" {
+  interface ClientService {
+    +List<ClientDTO> getAllClients()
+    +Optional<ClientDTO> getClientById(Long id)
+    +ClientDTO saveClient(ClientDTO clientDTO)
+  }
+
+  interface DossierService {
+    +List<DossierDTO> getAllDossiers()
+    +Optional<DossierDTO> getDossierById(Long id)
+    +DossierDTO saveDossier(DossierDTO dossierDTO)
+    +List<DossierDTO> getDossiersByClientId(Long clientId)
+    +List<DossierDTO> getDossiersByStatus(String statut)
+  }
+
+  class ClientServiceImpl {}
+  class DossierServiceImpl {}
+  
+  interface AuthService {}
+  interface SessionService {}
+  interface DocumentService {}
+  interface FactureService {}
+  interface PaiementService {}
+  interface DepenseService {}
+  
+  class SessionServiceImpl {}
+  class DocumentServiceImpl {}
+  class FactureServiceImpl {}
+  class PaiementServiceImpl {}
+  class DepenseServiceImpl {}
+  class UserDetailsServiceImpl {}
+}
+
+' تنظيم المتحكمات في حزمة
+package "controller" {
+  class ClientController {
+    +ResponseEntity<List<ClientDTO>> getAllClients()
+    +ResponseEntity<ClientDTO> getClientById(Long id)
+    +ResponseEntity<ClientDTO> createClient(ClientDTO clientDTO)
+  }
+
+  class DossierController {
+    +ResponseEntity<List<DossierDTO>> getAllDossiers()
+    +ResponseEntity<DossierDTO> getDossierById(Long id)
+    +ResponseEntity<DossierDTO> createDossier(DossierDTO dossierDTO)
+    +ResponseEntity<List<DossierDTO>> getDossiersByStatus(String statut)
+  }
+
+  class AuthController {}
+  class SessionController {}
+  class FactureController {}
+  class PaiementController {}
+  class DocumentController {}
+  class DepenseController {}
+}
+
+' روابط الواجهات والتنفيذات
+ClientService <|.. ClientServiceImpl
+DossierService <|.. DossierServiceImpl
+SessionService <|.. SessionServiceImpl
+DocumentService <|.. DocumentServiceImpl
+FactureService <|.. FactureServiceImpl
+PaiementService <|.. PaiementServiceImpl
+DepenseService <|.. DepenseServiceImpl
+
+' روابط المتحكمات والخدمات
+ClientController --> ClientService
+DossierController --> DossierService
+SessionController --> SessionService
+DocumentController --> DocumentService
+FactureController --> FactureService
+PaiementController --> PaiementService
+DepenseController --> DepenseService
+AuthController --> AuthService
+
+' روابط الخدمات والمستودعات
+ClientServiceImpl --> ClientRepository
+DossierServiceImpl --> DossierRepository
+DossierServiceImpl --> ClientRepository
+SessionServiceImpl --> SessionRepository
+DocumentServiceImpl --> DocumentRepository
+FactureServiceImpl --> FactureRepository
+PaiementServiceImpl --> PaiementRepository
+DepenseServiceImpl --> DepenseRepository
+UserDetailsServiceImpl --> UserRepository
+
+' العلاقات بين النماذج
+Utilisateur "1" -- "*" Dossier : est responsable >
+Client "1" -- "*" Dossier : possède >
+Dossier "1" -- "*" Session : contient >
+Dossier "1" -- "*" Document : contient >
+Dossier "1" -- "*" Facture : associé à >
+Facture "1" -- "*" ElementFacture : contient >
+Facture "1" -- "*" Paiement : reçoit >
+Utilisateur -- Role
+
+' العلاقات بين DTO والنماذج
+ClientDTO ..> Client : maps to
+DossierDTO ..> Dossier : maps to
+SessionDTO ..> Session : maps to
+DocumentDTO ..> Document : maps to
+FactureDTO ..> Facture : maps to
+PaiementDTO ..> Paiement : maps to
+DepenseDTO ..> Depense : maps to
+
+@enduml
