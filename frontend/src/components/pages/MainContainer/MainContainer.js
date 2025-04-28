@@ -5,6 +5,7 @@ import ChangePassword from '../ChangePassword/ChangePassword';
 import Support from '../Support/Support';
 import AllClients from '../Clients/AllClients/AllClients';
 import ClientTypes from '../Clients/ClientTypes/ClientTypes';
+import NewClient from '../Clients/NewClient/NewClient';
 import AllCases from '../Cases/AllCases/AllCases';
 import CaseTypes from '../Cases/CaseTypes/CaseTypes';
 import NewCase from '../Cases/NewCase/NewCase';
@@ -36,22 +37,16 @@ import Dashboard from '../Dashboard/Dashboard';
  * - Navigation entre les différentes pages
  */
 
-// تعريف ثوابت للفئات المشتركة لتقليل التكرار
-// Définition des constantes pour les classes communes afin de réduire la répétition
 const ICON_BUTTON_CLASSES = "p-2 transition-colors duration-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500";
 const ICON_CLASSES = "w-5 h-5 text-gray-700";
 const MOBILE_BUTTON_CLASSES = "flex items-center justify-start w-full px-3 py-2 text-left text-gray-700 transition-colors duration-200 rounded-md hover:bg-gray-100";
 
-// تعريف مكون مستقل للأيقونات لتجنب التكرار
-// Définition d'un composant indépendant pour les icônes pour éviter la répétition
 const Icon = ({ path, className = ICON_CLASSES }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
   </svg>
 );
 
-// تعريف مسارات الأيقونات
-// Définition des chemins d'icônes
 const ICONS = {
   menu: "M4 6h16M4 12h16M4 18h16",
   home: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
@@ -73,8 +68,6 @@ const ICONS = {
   files: "M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
 };
 
-
-// New icons for customer groups submenu items
 const SUBMENU_ICONS = {
   allClients: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
   clientTypes: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z",
@@ -83,8 +76,6 @@ const SUBMENU_ICONS = {
   caseTypes: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
 };
 
-// مكون لعرض التاريخ
-// Composant pour afficher la date
 const DateDisplay = ({ currentDate }) => (
   <div className="flex items-center overflow-hidden border border-gray-300 rounded-md">
     <div className="flex items-center justify-center p-2 border-r border-gray-300 bg-blue-50">
@@ -96,8 +87,6 @@ const DateDisplay = ({ currentDate }) => (
   </div>
 );
 
-// مكون زر القائمة المتنقلة
-// Composant pour le bouton de menu mobile
 const NavButton = ({ icon, label, onClick }) => (
   <button onClick={onClick} className={MOBILE_BUTTON_CLASSES}>
     <Icon path={icon} className="w-5 h-5 ml-2 text-gray-700" />
@@ -105,8 +94,6 @@ const NavButton = ({ icon, label, onClick }) => (
   </button>
 );
 
-// مكون للقائمة المنسدلة المتنقلة
-// Composant pour le sous-menu mobile
 const MobileSubmenu = ({ title, items, onClick, navigate }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -164,13 +151,9 @@ const MainContainer = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // تنسيق التاريخ الحالي "DD-Month-YYYY"
-    // Format de la date actuelle "JJ-Mois-AAAA"
     const today = new Date();
     setCurrentDate(`${String(today.getDate()).padStart(2, '0')}-${today.toLocaleString('en-US', { month: 'long' })}-${today.getFullYear()}`);
     
-    // معالجة النقرات خارج القائمة المتنقلة
-    // Gestion des clics en dehors du menu mobile
     const handleClickOutside = (event) => {
       if (mobileMenuOpen && 
           mobileMenuRef.current && 
@@ -181,16 +164,12 @@ const MainContainer = () => {
       }
     };
     
-    // الاستماع لتحديثات رؤية الشريط الجانبي
-    // Listening to sidebar visibility updates
     const handleSidebarStateChange = (event) => {
       if (event.detail.source !== 'toggle-button') {
         setSidebarVisible(event.detail.visible);
       }
     };
 
-    // حفظ تفضيل رؤية الشريط الجانبي
-    // Saving the sidebar visibility preference
     const savedSidebarState = localStorage.getItem('sidebarVisible');
     if (savedSidebarState !== null) {
       setSidebarVisible(savedSidebarState === 'true');
@@ -205,8 +184,6 @@ const MainContainer = () => {
     };
   }, [mobileMenuOpen]);
 
-  // تبديل رؤية الشريط الجانبي
-  // Toggle the sidebar visibility
   const toggleSidebar = (e) => {
     if (e) e.stopPropagation();
     const newVisibility = !sidebarVisible;
@@ -224,22 +201,16 @@ const MainContainer = () => {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
-  // التنقل إلى الصفحة المحددة وإغلاق القائمة
-  // Navigate to the specified page and close the menu
   const navigateTo = (path) => {
     navigate(path);
     closeMobileMenu();
   };
 
-  // تعريف عناصر القائمة المتنقلة
-  // Define mobile menu items
   const mobileNavItems = [
     { icon: ICONS.dashboard, label: "لوحة التحكم", onClick: () => navigateTo('/dashboard') },
     { icon: ICONS.files, label: "الملفّـات", onClick: () => navigateTo('/files') },
   ];
 
-  // تعريف عناصر إضافية للقائمة المتنقلة
-  // Define additional mobile menu items
   const additionalMobileNavItems = [
     { icon: ICONS.documents, label: "المستندات", onClick: () => navigateTo('/documents') },
     { icon: ICONS.invoices, label: "الفواتير", onClick: () => navigateTo('/invoices') },
@@ -256,8 +227,6 @@ const MainContainer = () => {
     }},
   ];
 
-  // تعريف عناصر القائمة المتنقلة
-  // Define mobile submenu items
   const mobileSubmenuItems = [
     { label: "عرض جميع العملاء", path: "/clients/all", icon: SUBMENU_ICONS.allClients },
     { label: "عرض أنواع العملاء", path: "/clients/types", icon: SUBMENU_ICONS.clientTypes }
@@ -272,7 +241,6 @@ const MainContainer = () => {
   return (
     <div className="w-full min-h-screen box-border bg-[#f5f6fa] flex flex-col">
       <header className="flex flex-wrap items-center justify-between w-full px-4 bg-white border-b border-gray-200 shadow-sm sm:px-6">
-        {/* زر تبديل الشريط الجانبي */}
         <div className="flex items-center h-16">
           <button 
             ref={sidebarToggleRef}
@@ -285,12 +253,10 @@ const MainContainer = () => {
           </button>
         </div>
         
-        {/* عرض التاريخ (مخفي في الشاشات الصغيرة) */}
         <div className="items-center hidden h-10 my-3 sm:flex">
           <DateDisplay currentDate={currentDate} />
         </div>
 
-        {/* الإجراءات - نسخة سطح المكتب */ }
         <div className="items-center hidden h-16 space-x-4 md:flex">
           <nav className="flex items-center ml-4 space-x-3">
             <button className={ICON_BUTTON_CLASSES}><Icon path={ICONS.home} /></button>
@@ -306,7 +272,6 @@ const MainContainer = () => {
           </div>
         </div>
         
-        {/* زر القائمة المتنقلة */}
         <div className="flex items-center h-16 md:hidden">
           <button
             ref={mobileMenuButtonRef}
@@ -319,14 +284,11 @@ const MainContainer = () => {
           </button>
         </div>
         
-        {/* القائمة المتنقلة */}
         {mobileMenuOpen && (
           <div ref={mobileMenuRef} className="absolute right-0 z-50 w-full bg-white border-b border-gray-200 shadow-md top-16 md:hidden">
             <div className="flex flex-col p-4 space-y-4">
-              {/* عرض التاريخ للهواتف */}
               <DateDisplay currentDate={currentDate} />
               
-              {/* ملف تعريف المستخدم للهواتف */}
               <div 
                 onClick={() => navigateTo('/profile')} 
                 className="flex items-center p-2 pt-4 mt-2 space-x-3 space-x-reverse border-t border-gray-200 cursor-pointer"
@@ -343,34 +305,26 @@ const MainContainer = () => {
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/files" element={<AllFiles />} />
-          {/* استخدام المكون الجديد UsersManagement */}
           <Route path="/users" element={<UsersManagement />} />
           <Route path="/new-user" element={<NewUser />} />
           <Route path="/settings" element={<AllSettings />} />
-          {/* مسارات العملاء */}
           <Route path="/clients/all" element={<AllClients />} />
           <Route path="/clients/types" element={<ClientTypes />} />
-          {/* مسارات القضايا */}
+          <Route path="/clients/new" element={<NewClient />} />
           <Route path="/cases/new" element={<NewCase />} />
           <Route path="/cases/all" element={<AllCases />} />
           <Route path="/cases/types" element={<CaseTypes />} />
-          {/* مسار الجلسات */}
           <Route path="/sessions" element={<AllSessions />} />
-          {/* مسارات جديدة تمت إضافتها */}
           <Route path="/documents" element={<AllDocuments />} />
           <Route path="/invoices" element={<AllInvoices />} />
           <Route path="/payments" element={<AllPayments />} />
           <Route path="/expenses" element={<AllExpenses />} />
           <Route path="/notifications" element={<AllNotifications />} />
           <Route path="/support" element={<Support />} />
-          {/* User Profile Route */}
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/change-password" element={<ChangePassword />} />
-          {/* User Edit Route */}
           <Route path="/edit-user/:id" element={<EditUser />} />
           <Route path="/view-user/:id" element={<ViewUserProfile />} />
-          
-          {/* صفحة افتراضية للمسارات غير الموجودة */}
           <Route path="*" element={<div className="p-4 bg-white rounded-lg shadow-sm">الصفحة غير موجودة</div>} />
         </Routes>
       </main>

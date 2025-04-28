@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { clientService } from '../../../../services/api';
 
 // تعريف ثوابت للفئات المشتركة لتقليل التكرار
@@ -13,6 +14,7 @@ const BADGE_CLASSES = {
 };
 
 const AllClients = () => {
+  const navigate = useNavigate();
   // حالة العملاء وتحميل البيانات
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -106,6 +108,11 @@ const AllClients = () => {
     }
   };
 
+  // تحويل إلى صفحة إضافة عميل جديد
+  const handleAddClient = () => {
+    navigate('/clients/new');
+  };
+  
   return (
     <div className="p-4 bg-white rounded-lg shadow-sm">
       <h1 className="mb-6 text-2xl font-bold text-gray-800">جميع العملاء</h1>
@@ -155,7 +162,10 @@ const AllClients = () => {
           </div>
         </div>
         
-        <button className={BUTTON_CLASSES}>
+        <button 
+          onClick={handleAddClient}
+          className={BUTTON_CLASSES}
+        >
           <svg className="w-5 h-5 ml-1" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
           </svg>

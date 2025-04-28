@@ -115,6 +115,12 @@ const ClientTypesIcon = () => (
   </svg>
 );
 
+const NewClientIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+  </svg>
+);
+
 // New icons for cases submenu
 const NewCaseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,7 +328,20 @@ const Sidebar = () => {
               </button>
               
               {openSections.clients && (
-                <div className={`${!isVisible && !isMobile ? 'flex flex-col items-center' : 'border-l-4 bg-gray-50 border-l-blue-200'}`}>
+            <div className={`${!isVisible && !isMobile ? 'flex flex-col items-center' : 'border-l-4 bg-gray-50 border-l-blue-200'}`}>
+                  <NavLink 
+                    to="/clients/new" 
+                    className={({ isActive }) => 
+                      isActive 
+                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
+                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
+                    }
+                  >
+                    <NewClientIcon />
+                    {(isVisible || !isMobile) && (
+                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>إضافة عميل جديد</span>
+                    )}
+                  </NavLink>
                   <NavLink 
                     to="/clients/all" 
                     className={({ isActive }) => 
