@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { userService } from '../../../../services/api';
 import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  ErrorModal, 
+  LoadingSpinner, 
+  NotificationToast 
+} from '../../../../components/common';
 
 const EditUser = () => {
   const { id } = useParams();
@@ -21,7 +26,20 @@ const EditUser = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  
+  // حالات الإشعارات والأخطاء
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'success'
+  });
+
+  // حالة نافذة الخطأ
+  const [errorModal, setErrorModal] = useState({
+    isOpen: false,
+    title: '',
+    message: ''
+  });
 
   // جلب بيانات المستخدم عند تحميل الصفحة
   useEffect(() => {
@@ -47,7 +65,7 @@ const EditUser = () => {
         }
       } catch (error) {
         console.error('Error fetching user:', error);
-        setError('تعذر جلب بيانات المستخدم. يرجى المحاولة مرة أخرى.');
+        openErrorModal('خطأ في العملية', 'تعذر جلب بيانات المستخدم. يرجى المحاولة مرة أخرى.');
       } finally {
         setLoading(false);
       }
@@ -72,7 +90,6 @@ const EditUser = () => {
     e.preventDefault();
     setSaving(true);
     setError(null);
-    setSuccess(false);
 
     try {
       // تحضير البيانات للإرسال
@@ -95,9 +112,8 @@ const EditUser = () => {
       const response = await userService.updateUser(id, userData);
       
       if (response.data) {
-        setSuccess(true);
-        // إعادة تعيين البيانات المحدثة
         setUser(response.data);
+        showNotification('تم تحديث بيانات المستخدم بنجاح');
         
         // انتظار قصير قبل العودة إلى صفحة إدارة المستخدمين
         setTimeout(() => {
@@ -112,7 +128,7 @@ const EditUser = () => {
         errorMsg = error.response.data.message;
       }
       
-      setError(errorMsg);
+      openErrorModal('خطأ في العملية', errorMsg);
     } finally {
       setSaving(false);
     }
@@ -139,13 +155,42 @@ const EditUser = () => {
     { value: 'COMPTABLE', label: 'محاسب' }
   ];
 
+  // فتح نافذة الخطأ
+  const openErrorModal = (title, message) => {
+    setErrorModal({
+      isOpen: true,
+      title,
+      message
+    });
+  };
+  
+  // إغلاق نافذة الخطأ
+  const closeErrorModal = () => {
+    setErrorModal({
+      isOpen: false,
+      title: '',
+      message: ''
+    });
+  };
+
+  // إظهار إشعار
+  const showNotification = (message, type = 'success') => {
+    setNotification({
+      show: true,
+      message,
+      type
+    });
+
+    // إخفاء الإشعار بعد 3 ثوان
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8 min-h-[60vh]">
-        <div className="text-center">
-          <div className="inline-block w-12 h-12 border-4 border-blue-600 border-solid rounded-full animate-spin border-r-transparent"></div>
-          <p className="mt-4 text-gray-700">جاري تحميل بيانات المستخدم...</p>
-        </div>
+        <LoadingSpinner size="lg" text="جاري تحميل بيانات المستخدم..." />
       </div>
     );
   }
@@ -175,6 +220,22 @@ const EditUser = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm">
+      {/* نافذة الخطأ */}
+      <ErrorModal
+        isOpen={errorModal.isOpen}
+        onClose={closeErrorModal}
+        title={errorModal.title}
+        message={errorModal.message}
+      />
+      
+      {/* مكون الإشعارات */}
+      <NotificationToast
+        show={notification.show}
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification(prev => ({ ...prev, show: false }))}
+      />
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">تعديل بيانات المستخدم</h1>
         <button
@@ -184,18 +245,6 @@ const EditUser = () => {
           العودة إلى القائمة
         </button>
       </div>
-
-      {error && (
-        <div className="p-3 mb-4 text-red-700 bg-red-100 rounded-md">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="p-3 mb-4 text-green-700 bg-green-100 rounded-md">
-          تم تحديث بيانات المستخدم بنجاح
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* معلومات المستخدم الأساسية */}
@@ -332,7 +381,12 @@ const EditUser = () => {
             className={`px-4 py-2 bg-blue-600 text-white rounded-md ${saving ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'}`}
             disabled={saving}
           >
-            {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+            {saving ? (
+              <div className="flex items-center">
+                <LoadingSpinner size="sm" color="light" inline={true} />
+                <span className="mr-2">جاري الحفظ...</span>
+              </div>
+            ) : 'حفظ التغييرات'}
           </button>
         </div>
       </form>

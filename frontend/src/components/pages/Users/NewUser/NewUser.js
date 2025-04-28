@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../../../../services/api';
+import { 
+  ErrorModal, 
+  LoadingSpinner, 
+  NotificationToast 
+} from '../../../../components/common';
 
 const NewUser = () => {
   const navigate = useNavigate();
@@ -23,8 +28,20 @@ const NewUser = () => {
   
   // حالة تقديم النموذج
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  
+  // حالات الإشعارات والأخطاء
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'success'
+  });
+
+  // حالة نافذة الخطأ
+  const [errorModal, setErrorModal] = useState({
+    isOpen: false,
+    title: '',
+    message: ''
+  });
   
   // التعامل مع تغيير القيم في النموذج
   const handleChange = (e) => {
@@ -97,6 +114,38 @@ const NewUser = () => {
     return Object.keys(newErrors).length === 0;
   };
   
+  // فتح نافذة الخطأ
+  const openErrorModal = (title, message) => {
+    setErrorModal({
+      isOpen: true,
+      title,
+      message
+    });
+  };
+  
+  // إغلاق نافذة الخطأ
+  const closeErrorModal = () => {
+    setErrorModal({
+      isOpen: false,
+      title: '',
+      message: ''
+    });
+  };
+
+  // إظهار إشعار
+  const showNotification = (message, type = 'success') => {
+    setNotification({
+      show: true,
+      message,
+      type
+    });
+
+    // إخفاء الإشعار بعد 3 ثوان
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
+  
   // معالجة تقديم النموذج
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -108,8 +157,6 @@ const NewUser = () => {
     
     // تعيين حالة التقديم
     setIsSubmitting(true);
-    setSubmitError(null);
-    setSubmitSuccess(false);
     
     try {
       // تحضير بيانات المستخدم للإرسال
@@ -136,8 +183,8 @@ const NewUser = () => {
       // استخدام الطريقة الجديدة التي تدعم إرسال البيانات الكاملة للمستخدم
       const response = await userService.createUserWithDetails(fullUserData);
       
-      // تعيين حالة النجاح
-      setSubmitSuccess(true);
+      // عرض إشعار نجاح
+      showNotification('تم إضافة المستخدم بنجاح');
 
       // الانتقال إلى صفحة إدارة المستخدمين بعد 1 ثانية
       setTimeout(() => {
@@ -148,11 +195,13 @@ const NewUser = () => {
       console.error('Error creating user:', error);
       
       // تعيين رسالة الخطأ
+      let errorMessage = 'حدث خطأ أثناء إضافة المستخدم. الرجاء المحاولة مرة أخرى.';
+      
       if (error.response && error.response.data && error.response.data.message) {
-        setSubmitError(error.response.data.message);
-      } else {
-        setSubmitError('حدث خطأ أثناء إضافة المستخدم. الرجاء المحاولة مرة أخرى.');
+        errorMessage = error.response.data.message;
       }
+      
+      openErrorModal('خطأ في إضافة المستخدم', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -176,6 +225,22 @@ const NewUser = () => {
   
   return (
     <div className="p-4 bg-white rounded-lg shadow-sm">
+      {/* نافذة الخطأ */}
+      <ErrorModal
+        isOpen={errorModal.isOpen}
+        onClose={closeErrorModal}
+        title={errorModal.title}
+        message={errorModal.message}
+      />
+      
+      {/* مكون الإشعارات */}
+      <NotificationToast
+        show={notification.show}
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification(prev => ({ ...prev, show: false }))}
+      />
+      
       {/* العنوان */}
       <div className="pb-4 mb-6 border-b">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -192,30 +257,6 @@ const NewUser = () => {
         </div>
         <p className="mt-1 text-sm text-gray-500">أضف مستخدمًا جديدًا للنظام وحدد صلاحياته</p>
       </div>
-      
-      {/* رسالة الخطأ */}
-      {submitError && (
-        <div className="p-4 mb-6 text-red-700 border border-red-200 rounded-md bg-red-50">
-          <p className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {submitError}
-          </p>
-        </div>
-      )}
-      
-      {/* رسالة النجاح */}
-      {submitSuccess && (
-        <div className="p-4 mb-6 text-green-700 border border-green-200 rounded-md bg-green-50">
-          <p className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            تم إضافة المستخدم بنجاح
-          </p>
-        </div>
-      )}
       
       {/* نموذج إضافة المستخدم */}
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -431,13 +472,12 @@ const NewUser = () => {
               isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >
-            {isSubmitting && (
-              <svg className="w-4 h-4 ml-2 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            )}
-            {isSubmitting ? 'جاري الإضافة...' : 'إضافة المستخدم'}
+            {isSubmitting ? (
+              <div className="flex items-center">
+                <LoadingSpinner size="sm" color="light" inline={true} />
+                <span className="mr-2">جاري الإضافة...</span>
+              </div>
+            ) : 'إضافة المستخدم'}
           </button>
         </div>
       </form>

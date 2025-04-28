@@ -1,68 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { userService } from '../../../../services/api';
 import { useNavigate } from 'react-router-dom';
-
-// مكون نافذة حوارية لعرض رسالة الخطأ بشكل أكثر تفصيلاً
-const ErrorModal = ({ isOpen, onClose, title, message }) => {
-  if (!isOpen) return null;
-  
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto bg-black bg-opacity-50 outline-none focus:outline-none">
-      <div className="relative w-full max-w-md px-4 mx-auto my-6">
-        <div className="relative flex flex-col w-full bg-white border-0 rounded-lg shadow-lg outline-none focus:outline-none">
-          {/* الرأس */}
-          <div className="flex items-start justify-between p-5 border-b border-gray-200 rounded-t">
-            <h3 className="text-xl font-semibold text-gray-900">
-              {title}
-            </h3>
-            <button
-              className="p-1 ml-0 mr-auto text-gray-400 transition-all bg-transparent border-0 outline-none hover:text-gray-900"
-              onClick={onClose}
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
-              </svg>
-            </button>
-          </div>
-          {/* المحتوى */}
-          <div className="relative flex-auto p-6">
-            <div className="text-gray-700">
-              {message.includes("دوسييهات") ? (
-                <div>
-                  <p className="mb-4">{message}</p>
-                  <div className="p-3 border rounded-md border-amber-200 bg-amber-50 text-amber-800">
-                    <div className="flex items-center mb-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="font-medium">ملاحظة مهمة:</span>
-                    </div>
-                    <ul className="mr-5 space-y-1 list-disc list-inside">
-                      <li>يجب عليك أولاً تعيين مسؤول آخر للدوسييهات المرتبطة بهذا المستخدم</li>
-                      <li>يمكنك القيام بذلك من خلال الانتقال إلى "إدارة القضايا" ثم تحديث المسؤول لكل قضية</li>
-                      <li>بعد نقل جميع القضايا، يمكنك محاولة حذف المستخدم مرة أخرى</li>
-                    </ul>
-                  </div>
-                </div>
-              ) : (
-                <p>{message}</p>
-              )}
-            </div>
-          </div>
-          {/* التذييل */}
-          <div className="flex items-center justify-end p-4 border-t border-gray-200 rounded-b">
-            <button
-              className="px-4 py-2 text-white transition-colors bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              onClick={onClose}
-            >
-              موافق
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+import { 
+  ErrorModal, 
+  LoadingSpinner, 
+  StatusBadge, 
+  RoleBadge, 
+  UserAvatar, 
+  NotificationToast,
+  Pagination,
+  EmptyState,
+  EmptySearchResults
+} from '../../../../components/common';
 
 const UsersManagement = () => {
   const navigate = useNavigate();
@@ -90,6 +39,20 @@ const UsersManagement = () => {
   const [error, setError] = useState(null);
   // حالة نوع الخطأ: 'connection' لمشاكل الاتصال، 'empty' لعدم وجود بيانات
   const [errorType, setErrorType] = useState(null);
+
+  // حالة نافذة الخطأ
+  const [errorModal, setErrorModal] = useState({
+    isOpen: false,
+    title: '',
+    message: ''
+  });
+  
+  // حالات الإشعارات
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'success' // 'success' أو 'error'
+  });
 
   // جلب البيانات من الخادم
   useEffect(() => {
@@ -305,60 +268,6 @@ const UsersManagement = () => {
     };
     return statuses[status] || status;
   };
-
-  // الألوان حسب نوع الدور
-  const getRoleColorClass = (role) => {
-    const colors = {
-      'admin': 'bg-blue-100 text-blue-800',
-      'administrateur': 'bg-blue-100 text-blue-800',
-      'super_admin': 'bg-purple-200 text-purple-900',
-      'lawyer': 'bg-purple-100 text-purple-800',
-      'avocat': 'bg-purple-100 text-purple-800',
-      'assistant': 'bg-green-100 text-green-800',
-      'assistant_juridique': 'bg-green-100 text-green-800',
-      'secretary': 'bg-yellow-100 text-yellow-800',
-      'comptable': 'bg-amber-100 text-amber-800'
-    };
-    return colors[role.toLowerCase()] || 'bg-gray-100 text-gray-800';
-  };
-
-  // الألوان حسب نوع الحالة
-  const getStatusColorClass = (status) => {
-    const colors = {
-      'active': 'bg-green-500',
-      'pending': 'bg-yellow-500',
-      'inactive': 'bg-red-500'
-    };
-    return colors[status] || 'bg-gray-500';
-  };
-
-  // الحرف الأول من اسم المستخدم
-  const getInitial = (firstName) => {
-    return firstName ? firstName.charAt(0) : 'U';
-  };
-
-  // لون الأيقونة حسب الدور
-  const getAvatarColor = (role) => {
-    const colors = {
-      'admin': 'bg-blue-600',
-      'administrateur': 'bg-blue-600',
-      'super_admin': 'bg-purple-700',
-      'lawyer': 'bg-purple-600',
-      'avocat': 'bg-purple-600',
-      'assistant': 'bg-green-600',
-      'assistant_juridique': 'bg-green-600',
-      'secretary': 'bg-yellow-600',
-      'comptable': 'bg-amber-600'
-    };
-    return colors[role.toLowerCase()] || 'bg-gray-600';
-  };
-
-  // حالة نافذة الخطأ
-  const [errorModal, setErrorModal] = useState({
-    isOpen: false,
-    title: '',
-    message: ''
-  });
   
   // فتح نافذة الخطأ
   const openErrorModal = (title, message) => {
@@ -377,13 +286,6 @@ const UsersManagement = () => {
       message: ''
     });
   };
-
-  // حالات الإشعارات
-  const [notification, setNotification] = useState({
-    show: false,
-    message: '',
-    type: 'success' // 'success' أو 'error'
-  });
 
   // إظهار إشعار
   const showNotification = (message, type = 'success') => {
@@ -480,6 +382,45 @@ const UsersManagement = () => {
     }
   };
 
+  // دوال مساعدة لعرض الألوان حسب الدور والحالة
+  const getAvatarColor = (role) => {
+    const colors = {
+      'admin': 'bg-blue-600',
+      'administrateur': 'bg-blue-600',
+      'super_admin': 'bg-purple-700',
+      'lawyer': 'bg-purple-600',
+      'avocat': 'bg-purple-600',
+      'assistant': 'bg-green-600',
+      'assistant_juridique': 'bg-green-600',
+      'secretary': 'bg-yellow-600',
+      'comptable': 'bg-amber-600'
+    };
+    return colors[role?.toLowerCase()] || 'bg-gray-600';
+  };
+
+  const getInitial = (name) => {
+    return name ? name.charAt(0).toUpperCase() : '?';
+  };
+
+  const getRoleColorClass = (role) => {
+    const colors = {
+      'admin': 'bg-blue-100 text-blue-800',
+      'administrateur': 'bg-blue-100 text-blue-800',
+      'super_admin': 'bg-purple-100 text-purple-800',
+      'lawyer': 'bg-purple-100 text-purple-800',
+      'avocat': 'bg-purple-100 text-purple-800',
+      'assistant': 'bg-green-100 text-green-800',
+      'assistant_juridique': 'bg-green-100 text-green-800',
+      'secretary': 'bg-yellow-100 text-yellow-800',
+      'comptable': 'bg-amber-100 text-amber-800'
+    };
+    return colors[role?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusColorClass = (status) => {
+    return status === 'active' ? 'bg-green-500' : 'bg-red-500';
+  };
+
   // تصيير واجهة رسالة الخطأ بناءً على نوع الخطأ
   const renderErrorMessage = () => {
     if (!error) return null;
@@ -518,8 +459,7 @@ const UsersManagement = () => {
     if (loading) {
       return (
         <div className="flex items-center justify-center p-6">
-          <div className="w-8 h-8 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-          <span className="mr-3">جاري التحميل...</span>
+          <LoadingSpinner size="md" text="جاري التحميل..." />
         </div>
       );
     }
@@ -549,15 +489,14 @@ const UsersManagement = () => {
     
     if (filteredUsers.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center p-6 text-gray-500">
-          <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 14h.01M12 20h.01M16 3h-8a5 5 0 00-5 5v12a1 1 0 001 1h16a1 1 0 001-1V8a5 5 0 00-5-5z"></path>
-          </svg>
-          <p className="text-lg">لا توجد بيانات متاحة</p>
-        </div>
+        <EmptySearchResults 
+          message="لم يتم العثور على مستخدمين" 
+          description="جرب تعديل معايير البحث أو الفلترة"
+        />
       );
     }
-    
+
+    // عرض جدول المستخدمين
     return (
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
@@ -611,8 +550,8 @@ const UsersManagement = () => {
                     onClick={() => navigate(`/view-user/${user.id}`)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   </button>
                   <button 
@@ -621,7 +560,7 @@ const UsersManagement = () => {
                     onClick={() => navigate(`/edit-user/${user.id}`)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
                   
@@ -635,7 +574,7 @@ const UsersManagement = () => {
                       onClick={(e) => e.preventDefault()}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                       </svg>
                     </button>
                   ) : (
@@ -646,11 +585,11 @@ const UsersManagement = () => {
                     >
                       {user.status === 'active' ? (
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       ) : (
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       )}
                     </button>
@@ -666,7 +605,7 @@ const UsersManagement = () => {
                       onClick={(e) => e.preventDefault()}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                       </svg>
                     </button>
                   ) : (

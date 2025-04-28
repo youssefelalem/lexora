@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { userService } from '../../../../services/api';
 import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  LoadingSpinner,
+  UserAvatar,
+  StatusBadge,
+  RoleBadge
+} from '../../../../components/common';
 
 const ViewUserProfile = () => {
   const { id } = useParams();
@@ -104,28 +110,11 @@ const ViewUserProfile = () => {
     }
   };
 
-  // لون الأيقونة حسب الدور
-  const getAvatarColor = (role) => {
-    const colors = {
-      'admin': 'bg-blue-600',
-      'administrateur': 'bg-blue-600',
-      'super_admin': 'bg-purple-700',
-      'lawyer': 'bg-purple-600',
-      'avocat': 'bg-purple-600',
-      'assistant': 'bg-green-600',
-      'assistant_juridique': 'bg-green-600',
-      'secretary': 'bg-yellow-600',
-      'comptable': 'bg-amber-600'
-    };
-    return colors[role?.toLowerCase()] || 'bg-gray-600';
-  };
-
   // عرض المؤشر الدوار أثناء التحميل
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-        <span className="mr-3">جاري التحميل...</span>
+        <LoadingSpinner size="lg" text="جاري التحميل..." />
       </div>
     );
   }
@@ -190,41 +179,22 @@ const ViewUserProfile = () => {
       {/* معلومات أساسية للمستخدم */}
       <div className="flex items-center mb-8">
         <div className="flex-shrink-0">
-          {userData.avatar ? (
-            <img 
-              src={userData.avatar} 
-              alt={`${userData.prenom || ''} ${userData.nom || ''}`}
-              className="object-cover w-24 h-24 border-2 border-gray-200 rounded-full"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-          ) : null}
-          <div className={`w-24 h-24 rounded-full ${getAvatarColor(userData.role)} flex items-center justify-center text-white text-3xl font-bold ${userData.avatar ? 'hidden' : ''}`}>
-            {userData.prenom ? userData.prenom.charAt(0).toUpperCase() : 'U'}
-          </div>
+          <UserAvatar 
+            name={`${userData.prenom || ''} ${userData.nom || ''}`}
+            role={userData.role}
+            image={userData.avatar}
+            size="lg"
+          />
         </div>
         
         <div className="mr-6">
           <h2 className="text-2xl font-bold">{userData.prenom} {userData.nom}</h2>
           <p className="text-gray-600">{userData.email}</p>
           <div className="flex mt-2">
-            <span className={`px-3 py-1 inline-flex text-sm leading-5 font-medium rounded-full ${
-              userData.estActive 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
-              <span className={`inline-block h-2 w-2 rounded-full ${
-                userData.estActive ? 'bg-green-500' : 'bg-red-500'
-              } mt-1 ml-1`}></span>
-              {userData.estActive ? 'نشط' : 'غير نشط'}
-            </span>
-            
-            <span className="inline-flex px-3 py-1 mr-2 text-sm font-medium leading-5 text-blue-800 bg-blue-100 rounded-full">
-              {translateRole(userData.role)}
-            </span>
+            <StatusBadge status={userData.estActive ? 'active' : 'inactive'} />
+            <div className="mr-2">
+              <RoleBadge role={userData.role} showText={true} />
+            </div>
           </div>
         </div>
       </div>
@@ -286,10 +256,7 @@ const ViewUserProfile = () => {
             
             <div className="flex flex-col">
               <span className="text-sm text-gray-500">حالة الحساب</span>
-              <div className="flex items-center">
-                <span className={`inline-block h-3 w-3 rounded-full ${userData.estActive ? 'bg-green-500' : 'bg-red-500'} ml-2`}></span>
-                <span className="font-medium">{userData.estActive ? 'نشط' : 'غير نشط'}</span>
-              </div>
+              <StatusBadge status={userData.estActive ? 'active' : 'inactive'} showText={true} />
             </div>
             
             {/* تاريخ إنشاء الحساب - تحسين طريقة العرض */}

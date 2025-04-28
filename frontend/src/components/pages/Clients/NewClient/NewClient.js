@@ -7,19 +7,20 @@ const NewClient = () => {
   
   // حالة بيانات العميل الجديد
   const [clientData, setClientData] = useState({
-    name: '',
+    nom: '',           // تغيير من name إلى nom
     email: '',
     phone: '',
-    type: 'شركة', // القيمة الافتراضية
+    type: 'شركة',
     address: '',
     contact: '',
     notes: '',
-    status: 'نشط' // القيمة الافتراضية
+    statut: 'نشط'      // تغيير من status إلى statut
   });
   
   // حالة التحميل والخطأ
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [generalError, setGeneralError] = useState('');
   const [success, setSuccess] = useState('');
   
   // خيارات أنواع العملاء
@@ -33,28 +34,64 @@ const NewClient = () => {
       ...prev,
       [name]: value
     }));
+    
+    // إزالة رسالة الخطأ عند تغيير قيمة الحقل
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+  
+  // التحقق من صحة البيانات
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // التحقق من الاسم
+    if (!clientData.nom.trim()) {
+      newErrors.nom = 'اسم العميل مطلوب';
+    } else if (clientData.nom.trim().length < 3) {
+      newErrors.nom = 'يجب أن يتكون الاسم من 3 أحرف على الأقل';
+    }
+    
+    // التحقق من البريد الإلكتروني
+    if (!clientData.email.trim()) {
+      newErrors.email = 'البريد الإلكتروني مطلوب';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(clientData.email)) {
+        newErrors.email = 'الرجاء إدخال بريد إلكتروني صحيح';
+      }
+    }
+    
+    // التحقق من رقم الهاتف (إذا تم إدخاله)
+    if (clientData.phone.trim()) {
+      const phoneRegex = /^[+]?[\d\s()-]{8,}$/;
+      if (!phoneRegex.test(clientData.phone)) {
+        newErrors.phone = 'الرجاء إدخال رقم هاتف صحيح';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
   
   // إرسال النموذج
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // التحقق من الحقول المطلوبة
-    if (!clientData.name || !clientData.email) {
-      setError('الرجاء ملء جميع الحقول المطلوبة');
-      return;
-    }
+    // إعادة تعيين رسائل الخطأ والنجاح
+    setGeneralError('');
+    setSuccess('');
     
-    // التحقق من صحة البريد الإلكتروني بشكل بسيط
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(clientData.email)) {
-      setError('الرجاء إدخال بريد إلكتروني صحيح');
+    // التحقق من صحة البيانات
+    if (!validateForm()) {
       return;
     }
     
     try {
       setIsSubmitting(true);
-      setError('');
       
       // استدعاء خدمة إنشاء عميل جديد
       const response = await clientService.createClient(clientData);
@@ -63,11 +100,48 @@ const NewClient = () => {
       
       // إعادة التوجيه إلى صفحة جميع العملاء بعد ثانيتين
       setTimeout(() => {
-        navigate('/clients');
+        navigate('/clients/all');
       }, 2000);
     } catch (err) {
       console.error('خطأ في إنشاء العميل:', err);
-      setError(err.response?.data?.message || 'حدث خطأ أثناء إنشاء العميل. الرجاء المحاولة مرة أخرى.');
+      
+      // معالجة الأخطاء بشكل أكثر تفصيلاً
+      if (err.response) {
+        // الخادم استجاب برمز حالة خارج نطاق 2xx
+        if (err.response.status === 400) {
+          // خطأ في البيانات المدخلة
+          if (err.response.data.errors) {
+            // إذا كانت هناك أخطاء محددة لحقول معينة
+            const serverErrors = {};
+            err.response.data.errors.forEach(error => {
+              serverErrors[error.field] = error.message;
+            });
+            setErrors(prev => ({...prev, ...serverErrors}));
+          } else if (err.response.data.message) {
+            setGeneralError(err.response.data.message);
+          } else {
+            setGeneralError('يوجد خطأ في البيانات المدخلة، يرجى التحقق منها');
+          }
+        } else if (err.response.status === 409) {
+          // تعارض - مثل تكرار البريد الإلكتروني
+          setGeneralError('هذا البريد الإلكتروني مسجل مسبقاً، يرجى استخدام بريد آخر');
+        } else if (err.response.status === 401) {
+          // غير مصرح به
+          setGeneralError('الجلسة منتهية، يرجى تسجيل الدخول مرة أخرى');
+          setTimeout(() => {
+            navigate('/login');
+          }, 2000);
+        } else {
+          // أخطاء أخرى من الخادم
+          setGeneralError(err.response.data.message || 'حدث خطأ أثناء معالجة طلبك، يرجى المحاولة مرة أخرى');
+        }
+      } else if (err.request) {
+        // لم يتم استلام استجابة من الخادم
+        setGeneralError('لا يمكن الاتصال بالخادم، يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى');
+      } else {
+        // حدث خطأ أثناء إعداد الطلب
+        setGeneralError('حدث خطأ أثناء معالجة طلبك، يرجى المحاولة مرة أخرى');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -75,7 +149,7 @@ const NewClient = () => {
   
   // العودة إلى الصفحة السابقة
   const handleCancel = () => {
-    navigate('/clients');
+    navigate('/clients/all');
   };
   
   return (
@@ -83,9 +157,9 @@ const NewClient = () => {
       <h1 className="mb-6 text-2xl font-bold text-gray-800">إضافة عميل جديد</h1>
       
       {/* رسائل النجاح والخطأ */}
-      {error && (
+      {generalError && (
         <div className="p-4 mb-4 text-sm text-white bg-red-500 rounded-md">
-          {error}
+          {generalError}
         </div>
       )}
       
@@ -99,19 +173,21 @@ const NewClient = () => {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* اسم العميل */}
           <div>
-            <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-700">
+            <label htmlFor="nom" className="block mb-2 text-sm font-medium text-gray-700">
               اسم العميل <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              id="name"
-              name="name"
-              value={clientData.name}
+              id="nom"
+              name="nom"
+              value={clientData.nom}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border ${errors.nom ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               placeholder="أدخل اسم العميل"
-              required
             />
+            {errors.nom && (
+              <p className="mt-1 text-xs text-red-500">{errors.nom}</p>
+            )}
           </div>
           
           {/* نوع العميل */}
@@ -143,11 +219,13 @@ const NewClient = () => {
               name="email"
               value={clientData.email}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               placeholder="example@example.com"
-              required
               dir="ltr"
             />
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+            )}
           </div>
           
           {/* رقم الهاتف */}
@@ -161,10 +239,13 @@ const NewClient = () => {
               name="phone"
               value={clientData.phone}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               placeholder="+212123456789"
               dir="ltr"
             />
+            {errors.phone && (
+              <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+            )}
           </div>
           
           {/* جهة الاتصال */}
@@ -185,13 +266,13 @@ const NewClient = () => {
           
           {/* الحالة */}
           <div>
-            <label htmlFor="status" className="block mb-2 text-sm font-medium text-gray-700">
+            <label htmlFor="statut" className="block mb-2 text-sm font-medium text-gray-700">
               الحالة
             </label>
             <select
-              id="status"
-              name="status"
-              value={clientData.status}
+              id="statut"
+              name="statut"
+              value={clientData.statut}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
