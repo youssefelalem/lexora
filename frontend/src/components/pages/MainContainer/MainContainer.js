@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import UserProfile from '../UserProfile/UserProfile';
-import ChangePassword from '../ChangePassword/ChangePassword';
+import EditProfile from '../UserProfile/EditProfile/EditProfile';
+import ChangePassword from '../UserProfile/ChangePassword/ChangePassword';
 import Support from '../Support/Support';
 import AllClients from '../Clients/AllClients/AllClients';
 import ClientTypes from '../Clients/ClientTypes/ClientTypes';
@@ -322,6 +323,7 @@ const MainContainer = () => {
           <Route path="/notifications" element={<AllNotifications />} />
           <Route path="/support" element={<Support />} />
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/edit-user/:id" element={<EditUser />} />
           <Route path="/view-user/:id" element={<ViewUserProfile />} />
