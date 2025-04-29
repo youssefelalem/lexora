@@ -100,12 +100,26 @@ const UserProfile = () => {
     if (!dateArray || !Array.isArray(dateArray)) return null;
     
     try {
-      // التنسيق المتوقع: [year, month, day, hour, minute, second, nanosecond]
-      const [year, month, day, hour, minute, second] = dateArray;
-      // لاحظ أن الشهر في كائن Date يبدأ من 0، لذا نطرح 1
-      return new Date(year, month - 1, day, hour, minute, second);
+      // التنسيق يمكن أن يكون مصفوفة بطول 3 أو 7 عناصر
+      // - للتاريخ فقط: [year, month, day]
+      // - للتاريخ والوقت: [year, month, day, hour, minute, second, nanosecond]
+      
+      if (dateArray.length >= 3) {
+        const [year, month, day] = dateArray;
+        
+        if (dateArray.length >= 6) {
+          const [, , , hour, minute, second] = dateArray;
+          // لاحظ أن الشهر في كائن Date يبدأ من 0، لذا نطرح 1
+          return new Date(year, month - 1, day, hour || 0, minute || 0, second || 0);
+        } else {
+          // إذا كان لدينا تاريخ فقط بدون وقت
+          return new Date(year, month - 1, day);
+        }
+      }
+      
+      return null;
     } catch (error) {
-      console.error('خطأ في تنسيق التاريخ:', error);
+      console.error('خطأ في تنسيق التاريخ:', error, dateArray);
       return null;
     }
   };
@@ -121,21 +135,34 @@ const UserProfile = () => {
         date = formatDateArray(dateValue);
       } else if (typeof dateValue === 'string') {
         date = new Date(dateValue);
-      } else {
+      } else if (dateValue instanceof Date) {
         date = dateValue;
+      } else {
+        console.warn('نوع بيانات تاريخ غير معروف:', typeof dateValue, dateValue);
+        return 'تنسيق غير معروف';
       }
       
       if (!date || isNaN(date.getTime())) {
+        console.warn('تاريخ غير صالح:', dateValue);
         return 'تاريخ غير صالح';
       }
       
-      return date.toLocaleDateString('ar-MA', {
+      // استخدم تنسيق عربي للعرض
+      const options = {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
-      });
+        day: 'numeric',
+      };
+      
+      // إضافة الوقت إذا كان يحتوي على معلومات الوقت
+      if (Array.isArray(dateValue) && dateValue.length > 3) {
+        options.hour = '2-digit';
+        options.minute = '2-digit';
+      }
+      
+      return date.toLocaleDateString('ar-MA', options);
     } catch (error) {
-      console.error('خطأ في عرض التاريخ:', error);
+      console.error('خطأ في عرض التاريخ:', error, dateValue);
       return 'تاريخ غير صالح';
     }
   };

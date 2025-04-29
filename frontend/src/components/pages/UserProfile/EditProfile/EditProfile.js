@@ -1,7 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../../components/features/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import api, { userService } from '../../../../services/api';
+import { userService } from '../../../../services/api';
+
+// دالة مساعدة للتعامل مع تنسيق التاريخ بشكل آمن
+const formatDateSafely = (dateValue) => {
+  if (!dateValue) return '';
+  
+  try {
+    // إذا كان التاريخ مصفوفة (كما يعود من الخادم) مثل [2004, 11, 3]
+    if (Array.isArray(dateValue)) {
+      if (dateValue.length >= 3) {
+        const [year, month, day] = dateValue;
+        // ضبط التاريخ بتنسيق ISO للعرض في حقل input من نوع date
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+      return '';
+    }
+  
+    // إذا كان التاريخ سلسلة نصية، نتحقق إذا كان بتنسيق ISO
+    if (typeof dateValue === 'string') {
+      // إذا كان التاريخ بتنسيق ISO صحيح
+      if (/^\d{4}-\d{2}-\d{2}/.test(dateValue)) {
+        return dateValue.substring(0, 10);
+      }
+      return dateValue;
+    }
+  
+    // إذا كان التاريخ كائن Date، نحوله إلى تنسيق ISO
+    if (dateValue instanceof Date) {
+      return dateValue.toISOString().substring(0, 10);
+    }
+    
+    // إذا لم يكن أي من الأنواع المتوقعة
+    return '';
+  } catch (error) {
+    console.error('خطأ في تنسيق التاريخ:', error);
+    return '';
+  }
+};
+
+// دالة لتحويل المصفوفة إلى كائن تاريخ
+const dateArrayToObject = (dateArray) => {
+  if (!dateArray || !Array.isArray(dateArray)) return null;
+  
+  try {
+    if (dateArray.length >= 3) {
+      const [year, month, day] = dateArray;
+      // لاحظ أن الشهر في جافا يبدأ من 0 بينما نحن نستخدم 1-12
+      return new Date(year, month - 1, day);
+    }
+    return null;
+  } catch (error) {
+    console.error('خطأ في تحويل مصفوفة التاريخ:', error);
+    return null;
+  }
+};
 
 const EditProfile = () => {
   const { user, updateUserInContext } = useAuth();
@@ -11,7 +65,7 @@ const EditProfile = () => {
     email: user?.email || '',
     telephone: user?.telephone || '',
     adresse: user?.adresse || '',
-    dateNaissance: user?.dateNaissance ? user.dateNaissance.substring(0, 10) : '',
+    dateNaissance: formatDateSafely(user?.dateNaissance),
     avatar: user?.avatar || ''
   });
   
@@ -42,7 +96,7 @@ const EditProfile = () => {
           email: user.email || '',
           telephone: user.telephone || '',
           adresse: user.adresse || '',
-          dateNaissance: user.dateNaissance ? user.dateNaissance.substring(0, 10) : '',
+          dateNaissance: formatDateSafely(user.dateNaissance),
           avatar: user.avatar || ''
         });
       }
@@ -61,8 +115,9 @@ const EditProfile = () => {
         // Log the request details for debugging
         console.log(`Fetching user profile for ID: ${userId}, attempt: ${retryCount + 1}`);
         
-        // Use userService instead of direct axios call
+        // استخدام userService بشكل صحيح
         const response = await userService.getUserById(userId);
+        console.log("API response data:", response.data);
         
         // Only update state if the component is still mounted
         if (isMounted && response.data) {
@@ -73,7 +128,7 @@ const EditProfile = () => {
             email: response.data.email || user.email || '',
             telephone: response.data.telephone || user.telephone || '',
             adresse: response.data.adresse || user.adresse || '',
-            dateNaissance: response.data.dateNaissance ? response.data.dateNaissance.substring(0, 10) : user.dateNaissance ? user.dateNaissance.substring(0, 10) : '',
+            dateNaissance: formatDateSafely(response.data.dateNaissance) || formatDateSafely(user.dateNaissance),
             avatar: response.data.avatar || user.avatar || ''
           });
           
@@ -168,15 +223,27 @@ const EditProfile = () => {
         avatar: formData.avatar.trim() || null
       };
       
-      // Special handling for date
-      if (formData.dateNaissance && formData.dateNaissance.trim() !== '') {
-        userData.dateNaissance = formData.dateNaissance;
+      // تحسين التعامل مع التاريخ للتأكد من عدم وجود خطأ
+      if (formData.dateNaissance && typeof formData.dateNaissance === 'string' && formData.dateNaissance.trim() !== '') {
+        try {
+          // تحويل سلسلة التاريخ إلى مصفوفة كما يتوقعها الخادم [year, month, day]
+          const dateObj = new Date(formData.dateNaissance);
+          if (!isNaN(dateObj.getTime())) {
+            userData.dateNaissance = [
+              dateObj.getFullYear(),
+              dateObj.getMonth() + 1, // JavaScript months are 0-indexed
+              dateObj.getDate()
+            ];
+          }
+        } catch (error) {
+          console.error("خطأ في تنسيق التاريخ:", error);
+        }
       }
       
-      // Use userService instead of direct axios call
+      // استخدام userService بشكل صحيح
       const response = await userService.updateUser(userId, userData);
       
-      if (response.data) {
+      if (response && response.data) {
         // Update user state in AuthContext
         updateUserInContext(response.data);
         setSuccess(true);
@@ -215,9 +282,9 @@ const EditProfile = () => {
   // Show loading indicator while fetching data, but only on initial load
   if (!user || (isFetchingProfile && retryCount === 0)) {
     return (
-      <div className="flex justify-center items-center p-8">
+      <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+          <div className="inline-block w-12 h-12 border-4 border-blue-600 border-solid rounded-full animate-spin border-r-transparent"></div>
           <p className="mt-4 text-gray-700">جاري تحميل بيانات المستخدم...</p>
         </div>
       </div>
@@ -238,7 +305,7 @@ const EditProfile = () => {
       </div>
       
       {error && (
-        <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
+        <div className="p-4 mb-6 text-red-700 bg-red-100 rounded-md">
           <p className="font-medium">حدث خطأ:</p>
           <p>{error}</p>
           {retryCount > 0 && isFetchingProfile && (
