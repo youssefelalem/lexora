@@ -12,11 +12,14 @@ import io.jsonwebtoken.Jwts; // استيراد مكتبة JWT // Importation de 
 import io.jsonwebtoken.security.Keys; // استيراد أدوات المفاتيح // Importation des utilitaires de clés
 import java.security.Key; // استيراد واجهة المفتاح // Importation de l'interface Key
 import java.time.LocalDate; // استيراد LocalDate للتعامل مع التواريخ
+import java.time.LocalDateTime;
 import java.util.Date; // استيراد كلاس التاريخ // Importation de la classe Date
 import java.util.HashMap; // استيراد HashMap // Importation de HashMap
 import java.util.List;
 import java.util.Map; // استيراد واجهة Map // Importation de l'interface Map
 import java.util.Optional; // استيراد Optional // Importation de Optional
+import java.util.UUID;
+
 import jakarta.persistence.EntityNotFoundException; // استيراد لمعالجة حالة عدم العثور على المستخدم
 import java.nio.charset.StandardCharsets; // استيراد للتعامل مع الترميز // Importation pour gérer l'encodage
 
@@ -29,6 +32,7 @@ public class AuthService {
     private final UserRepository userRepository; // مستودع المستخدمين // Repository des utilisateurs
     private final PasswordEncoder passwordEncoder; // مشفر كلمات المرور // Encodeur de mot de passe
     private final JwtProperties jwtProperties; // خصائص JWT // Propriétés JWT
+    private final EmailService emailService; // خدمة البريد الإلكتروني // Service de courrier électronique
     
     // مفتاح سري لتوقيع وتحقق من رموز JWT // Clé secrète pour signer et vérifier les tokens JWT
     private final Key key;
@@ -38,11 +42,13 @@ public class AuthService {
      * @param userRepository مستودع المستخدمين للتعامل مع قاعدة البيانات // userRepository: Repository utilisateur pour interagir avec la base de données
      * @param passwordEncoder مشفر كلمات المرور لتأمين كلمات المرور // passwordEncoder: Encodeur pour sécuriser les mots de passe
      * @param jwtProperties خصائص JWT للتكوين // jwtProperties: Propriétés JWT pour la configuration
+     * @param emailService خدمة البريد الإلكتروني لإرسال البريد // emailService: Service de courrier électronique pour envoyer des e-mails
      */
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtProperties jwtProperties) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtProperties jwtProperties, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtProperties = jwtProperties;
+        this.emailService = emailService;
         
         // إنشاء المفتاح من السلسلة السرية المكونة // Créer la clé à partir de la chaîne secrète configurée
         this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
@@ -132,7 +138,22 @@ public class AuthService {
         }
 
         // حفظ المستخدم في قاعدة البيانات // Sauvegarder l'utilisateur dans la base de données
-        return userRepository.save(utilisateur);
+        Utilisateur savedUser = userRepository.save(utilisateur);
+        
+        // إرسال بريد إلكتروني ترحيبي
+        try {
+            String clearPassword = "";
+            if (userData != null && userData.containsKey("sendWelcomeEmail") && (Boolean)userData.get("sendWelcomeEmail")) {
+                // إذا كنا نريد إرسال كلمة المرور الأصلية في البريد الإلكتروني الترحيبي
+                clearPassword = password;  // كلمة المرور الغير مشفرة للإرسال بالبريد الإلكتروني فقط
+                emailService.sendWelcomeEmail(email, utilisateur.getNomComplet(), clearPassword);
+            }
+        } catch (Exception e) {
+            // تسجيل الخطأ ولكن لا نريد إيقاف العملية إذا فشل إرسال البريد الإلكتروني
+            System.err.println("خطأ في إرسال بريد الترحيب: " + e.getMessage());
+        }
+        
+        return savedUser;
     }
 
     /**
@@ -400,6 +421,27 @@ public class AuthService {
             }
         }
         
+        /**
+         * إذا كانت البيانات تحتوي على حقل 'theme' قم بتحديث تفضيلات المستخدم
+         */
+        if (userData.containsKey("theme")) {
+            String currentPreferences = existingUser.getPreferencesJson();
+            try {
+                Map<String, Object> preferences;
+                if (currentPreferences != null && !currentPreferences.isEmpty()) {
+                    // تحويل JSON الحالي إلى Map
+                    preferences = new HashMap<>();  // يمكن استخدام Jackson هنا للتحويل
+                } else {
+                    preferences = new HashMap<>();
+                }
+                preferences.put("theme", userData.get("theme"));
+                // تحويل Map إلى JSON وتخزين
+                existingUser.setPreferencesJson(preferences.toString());  // يمكن استخدام Jackson هنا للتحويل
+            } catch (Exception e) {
+                System.err.println("خطأ في تحديث تفضيلات المستخدم: " + e.getMessage());
+            }
+        }
+        
         // لا تقم بتحديث البريد الإلكتروني أو كلمة المرور أو الصلاحيات هنا
         
         return userRepository.save(existingUser);
@@ -435,5 +477,115 @@ public class AuthService {
         
         // حذف المستخدم من قاعدة البيانات
         userRepository.delete(utilisateur);
+    }
+    
+    /**
+     * طلب استعادة كلمة المرور - يرسل بريدًا إلكترونيًا برابط إعادة التعيين
+     * Request for password recovery - sends an email with a reset link
+     * 
+     * @param email البريد الإلكتروني للمستخدم المراد استعادة كلمة مروره
+     * @return رسالة تأكيد
+     * @throws EntityNotFoundException إذا لم يتم العثور على المستخدم
+     */
+    @Transactional
+    public String forgotPassword(String email) {
+        try {
+            // البحث عن المستخدم بواسطة البريد الإلكتروني
+            Utilisateur user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new EntityNotFoundException("لم يتم العثور على مستخدم بهذا البريد الإلكتروني"));
+            
+            // إنشاء رمز استعادة فريد
+            String token = UUID.randomUUID().toString();
+            
+            // تعيين رمز استعادة كلمة المرور وتاريخ انتهاء صلاحيته (24 ساعة من الآن)
+            user.setTokenReinitialisation(token);
+            user.setExpirationToken(LocalDateTime.now().plusHours(24));
+            
+            // حفظ التغييرات
+            userRepository.save(user);
+            
+            try {
+                // إرسال بريد إلكتروني يحتوي على رابط إعادة التعيين
+                emailService.sendPasswordResetEmail(email, token, user.getNomComplet());
+                System.out.println("Password reset token created and email sent for user: " + email);
+            } catch (Exception emailException) {
+                // تسجيل الخطأ دون رميه للمستدعي - سنستمر في العملية حتى لو فشل البريد
+                System.err.println("فشل في إرسال بريد إعادة تعيين كلمة المرور: " + emailException.getMessage());
+                System.out.println("تم إنشاء رمز إعادة تعيين لكن فشل إرسال البريد.");
+                System.out.println("Reset token (for development purposes): " + token);
+            }
+            
+            // نرجع رسالة ناجحة حتى إذا فشل البريد
+            return "تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد الخاص بك.";
+        } catch (EntityNotFoundException e) {
+            // رمي الاستثناء للتعامل معه في المتحكم
+            throw e;
+        } catch (Exception e) {
+            // تسجيل الخطأ غير المتوقع وإعادة رميه كاستثناء وقت التشغيل
+            System.err.println("خطأ غير متوقع في استعادة كلمة المرور: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("حدث خطأ أثناء معالجة طلب استعادة كلمة المرور: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * التحقق من صحة رمز استعادة كلمة المرور
+     * Verify password reset token
+     * 
+     * @param token الرمز المراد التحقق منه
+     * @return true إذا كان الرمز صالحًا، false إذا كان غير ذلك
+     */
+    public boolean validateResetToken(String token) {
+        Utilisateur user = userRepository.findByTokenReinitialisation(token)
+                .orElse(null);
+                
+        if (user == null) {
+            return false;
+        }
+        
+        // التحقق من انتهاء صلاحية الرمز
+        if (user.getExpirationToken() == null || LocalDateTime.now().isAfter(user.getExpirationToken())) {
+            // إذا انتهت صلاحية الرمز، قم بإعادة تعيينه
+            user.setTokenReinitialisation(null);
+            user.setExpirationToken(null);
+            userRepository.save(user);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * إعادة تعيين كلمة المرور باستخدام رمز
+     * Reset password using token
+     * 
+     * @param token رمز إعادة التعيين
+     * @param newPassword كلمة المرور الجديدة
+     * @return رسالة تأكيد
+     * @throws RuntimeException إذا كان الرمز غير صالح أو منتهي الصلاحية
+     */
+    @Transactional
+    public String resetPassword(String token, String newPassword) {
+        if (!validateResetToken(token)) {
+            throw new RuntimeException("رمز استعادة كلمة المرور غير صالح أو منتهي الصلاحية");
+        }
+        
+        Utilisateur user = userRepository.findByTokenReinitialisation(token)
+                .orElseThrow(() -> new RuntimeException("رمز استعادة كلمة المرور غير صالح"));
+        
+        // تعيين كلمة المرور الجديدة وتشفيرها
+        user.setMotDePasseHash(passwordEncoder.encode(newPassword));
+        
+        // إعادة تعيين رمز الاستعادة وتاريخ انتهاء صلاحيته
+        user.setTokenReinitialisation(null);
+        user.setExpirationToken(null);
+        
+        // إعادة تعيين عداد محاولات تسجيل الدخول الفاشلة (إذا وجد)
+        user.reinitialiserTentativesConnexion();
+        
+        // حفظ التغييرات
+        userRepository.save(user);
+        
+        return "تم إعادة تعيين كلمة المرور بنجاح";
     }
 }

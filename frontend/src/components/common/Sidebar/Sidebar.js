@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext';
+import { ROLES } from '../../features/auth/AuthContext';
 import logo from '../../../logo.svg';
 
 // Icons (using SVG for better quality)
@@ -141,7 +142,7 @@ const CaseTypesIcon = () => (
 );
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, hasRole, isAdmin, isAvocat, isSecretaire } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const sidebarRef = useRef(null);
@@ -260,6 +261,336 @@ const Sidebar = () => {
       document.dispatchEvent(stateChangeEvent);
     }
   };
+  // قائمة معدّة للعرض حسب دور المستخدم
+  const getMenuItemsByRole = () => {
+    console.log("Current user in sidebar:", user);
+    console.log("Role checks:", {
+      isAdmin: isAdmin,
+      isAvocat: isAvocat, 
+      isSecretaire: isSecretaire
+    });
+    console.log("Role validation test:", {
+      'ROLE_ADMIN': hasRole(ROLES.ADMIN),
+      'ROLE_AVOCAT': hasRole(ROLES.AVOCAT),
+      'ROLE_SECRETAIRE': hasRole(ROLES.SECRETAIRE)
+    });
+    
+    // قائمة العناصر المشتركة للجميع (لوحة القيادة)
+    const items = [
+      {
+        id: 'dashboard',
+        type: 'single',
+        link: '/dashboard',
+        icon: <DashboardIcon />,
+        label: 'لوحة التحكم',
+        roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE]
+      }
+    ];
+    
+    // عنصر إدارة العملاء
+    if (isAdmin || isAvocat || isSecretaire) {
+      items.push({
+        id: 'clients',
+        type: 'dropdown',
+        icon: <ClientsIcon />,
+        label: 'العملاء',
+        roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE],
+        children: [
+          {
+            id: 'new-client',
+            link: '/clients/new',
+            icon: <NewClientIcon />,
+            label: 'إضافة عميل جديد',
+            roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE]
+          },
+          {
+            id: 'all-clients',
+            link: '/clients/all',
+            icon: <AllClientsIcon />,
+            label: 'عرض جميع العملاء',
+            roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE]
+          },
+          {
+            id: 'client-types',
+            link: '/clients/types',
+            icon: <ClientTypesIcon />,
+            label: 'عرض أنواع العملاء',
+            roles: [ROLES.ADMIN]
+          }
+        ]
+      });
+    }
+    
+    // عنصر إدارة القضايا
+    if (isAdmin || isAvocat || isSecretaire) {
+      items.push({
+        id: 'cases',
+        type: 'dropdown',
+        icon: <CasesIcon />,
+        label: 'القضايا',
+        roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE],
+        children: [
+          {
+            id: 'new-case',
+            link: '/cases/new',
+            icon: <NewCaseIcon />,
+            label: 'إضافة قضية جديدة',
+            roles: [ROLES.ADMIN, ROLES.AVOCAT]
+          },
+          {
+            id: 'all-cases',
+            link: '/cases/all',
+            icon: <AllCasesIcon />,
+            label: 'عرض جميع القضايا',
+            roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE]
+          },
+          {
+            id: 'case-types',
+            link: '/cases/types',
+            icon: <CaseTypesIcon />,
+            label: 'أنواع القضايا',
+            roles: [ROLES.ADMIN]
+          }
+        ]
+      });
+    }
+    
+    // عنصر إدارة الجلسات
+    if (isAdmin || isAvocat || isSecretaire) {
+      items.push({
+        id: 'sessions',
+        type: 'single',
+        link: '/sessions',
+        icon: <SessionsIcon />,
+        label: 'الجلسات',
+        roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE]
+      });
+    }
+    
+    // عنصر إدارة الوثائق
+    if (isAdmin || isAvocat || isSecretaire) {
+      items.push({
+        id: 'documents',
+        type: 'dropdown',
+        icon: <DocumentsIcon />,
+        label: 'الوثائق',
+        roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE],
+        children: [
+          {
+            id: 'documents',
+            link: '/documents',
+            icon: <DocumentsIcon />,
+            label: 'المستندات',
+            roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE]
+          },
+          {
+            id: 'files',
+            link: '/files',
+            icon: <FilesIcon />,
+            label: 'الملفّـات',
+            roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE]
+          }
+        ]
+      });
+    }
+    
+    // عنصر إدارة المالية - فقط للمشرف والمحامي
+    if (isAdmin || isAvocat) {
+      items.push({
+        id: 'financial',
+        type: 'dropdown',
+        icon: <InvoicesIcon />,
+        label: 'المالية',
+        roles: [ROLES.ADMIN, ROLES.AVOCAT],
+        children: [
+          {
+            id: 'invoices',
+            link: '/invoices',
+            icon: <InvoicesIcon />,
+            label: 'الفواتير',
+            roles: [ROLES.ADMIN, ROLES.AVOCAT]
+          },
+          {
+            id: 'payments',
+            link: '/payments',
+            icon: <PaymentsIcon />,
+            label: 'المدفوعات',
+            roles: [ROLES.ADMIN, ROLES.AVOCAT]
+          },
+          {
+            id: 'expenses',
+            link: '/expenses',
+            icon: <ExpensesIcon />,
+            label: 'النفقات',
+            roles: [ROLES.ADMIN, ROLES.AVOCAT]
+          }
+        ]
+      });
+    }
+    
+    // عنصر الإشعارات
+    items.push({
+      id: 'notifications',
+      type: 'single',
+      link: '/notifications',
+      icon: <NotificationsIcon />,
+      label: 'الإشعارات',
+      roles: [ROLES.ADMIN, ROLES.AVOCAT, ROLES.SECRETAIRE]
+    });
+    
+    // عنصر إدارة النظام - فقط للمشرف
+    if (isAdmin) {
+      items.push({
+        id: 'system',
+        type: 'dropdown',
+        icon: <SettingsIcon />,
+        label: 'النظام',
+        roles: [ROLES.ADMIN],
+        children: [
+          {
+            id: 'users',
+            link: '/users',
+            icon: <UsersIcon />,
+            label: 'المستخدمون',
+            roles: [ROLES.ADMIN]
+          },
+          {
+            id: 'settings',
+            link: '/settings',
+            icon: <SettingsIcon />,
+            label: 'الإعدادات',
+            roles: [ROLES.ADMIN]
+          },
+          {
+            id: 'support',
+            link: '/support',
+            icon: <HelpSupportIcon />,
+            label: 'المساعدة والدعم',
+            roles: [ROLES.ADMIN]
+          }
+        ]
+      });
+    }
+    
+    return items;
+  };
+    // تحويل قائمة العناصر من المصفوفة إلى عناصر مرئية
+  // دالة لتصحيح عرض العناصر في القائمة الجانبية
+  const renderMenuItem = (item) => {    // إعادة تفعيل فحص الصلاحيات بعد إصلاح دالة hasRole - مع إضافة استثناء مؤقت
+    // تجاوز فحص الصلاحيات مؤقتًا للتأكد من ظهور العناصر
+    let canViewItem = true;
+    
+    if (user && item.roles) {
+      const userRoles = user.roles || (user.role ? [user.role] : []);
+      console.log(`Checking item: ${item.id}, User role: ${user.role || 'undefined'}, User roles array:`, userRoles);
+      
+      try {
+        // استخدام خاصية مؤقتة للتجاوز - في حالة المستخدم ADMINISTRATEUR، اعرض كل شيء
+        if (user.role === 'ADMINISTRATEUR') {
+          canViewItem = true; // المدير يرى كل شيء
+        } else {
+          canViewItem = item.roles.some(role => hasRole(role));
+        }
+        
+        // سجّل معلومات التصحيح لمساعدة في التشخيص إذا استمرت المشكلة
+        if (!canViewItem) {
+          console.log(`Item ${item.id} denied - Required roles: ${item.roles.join(', ')} - User role: ${user.role || 'none'}`);
+        }
+      } catch (error) {
+        console.error("خطأ في التحقق من الأدوار:", error);
+      }
+    }
+    
+    if (!canViewItem) return null;
+    
+    if (!user) return null;
+    
+    if (item.type === 'single') {
+      // عنصر واحد بدون قائمة فرعية
+      return (
+        <NavLink 
+          key={item.id}
+          to={item.link} 
+          className={({ isActive }) => 
+            isActive 
+              ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center px-4 py-3 text-blue-600 bg-gray-50 border-l-4 border-blue-500 gap-2` 
+              : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-200 gap-2`
+          }
+        >
+          {item.icon}
+          {(isVisible || !isMobile) && (
+            <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>{item.label}</span>
+          )}
+        </NavLink>
+      );
+    } else if (item.type === 'dropdown') {
+      // عنصر مع قائمة فرعية
+      return (
+        <div key={item.id} className="w-full">
+          <button 
+            onClick={() => toggleSection(item.id)}
+            className={`flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center w-full px-4 py-3 text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:text-blue-600`}
+          >
+            <div className={`flex items-center ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} gap-2`}>
+              {item.icon}
+              {(isVisible || !isMobile) && (
+                <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>{item.label}</span>
+              )}
+            </div>
+            {(isVisible || !isMobile) && (
+              <ChevronDownIcon className={openSections[item.id] ? "transform rotate-180 ml-auto" : "ml-auto"} />
+            )}
+          </button>
+            {openSections[item.id] && (
+            <div className={`${!isVisible && !isMobile ? 'flex flex-col items-center' : 'border-l-4 bg-gray-50 border-l-blue-200'}`}>              {item.children.map(child => {
+                // تصحيح للعناصر الفرعية أيضاً - مع إضافة استثناء مؤقت
+                let canViewChild = true;
+                
+                if (user && child.roles) {
+                  try {
+                    // استخدام خاصية مؤقتة للتجاوز - في حالة المستخدم ADMINISTRATEUR، اعرض كل شيء
+                    if (user.role === 'ADMINISTRATEUR') {
+                      canViewChild = true; // المدير يرى كل شيء
+                    } else {
+                      canViewChild = child.roles.some(role => hasRole(role));
+                    }
+                    
+                    // سجّل معلومات التصحيح للمساعدة في التشخيص
+                    if (!canViewChild) {
+                      console.log(`Child item ${child.id} denied - Required roles: ${child.roles.join(', ')} - User role: ${user.role || 'none'}`);
+                    }
+                  } catch (error) {
+                    console.error("خطأ في التحقق من أدوار العنصر الفرعي:", error);
+                  }
+                }
+                
+                if (!canViewChild) return null;
+                
+                return (
+                  <NavLink 
+                    key={child.id}
+                    to={child.link} 
+                    className={({ isActive }) => 
+                      isActive 
+                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
+                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
+                    }
+                  >
+                    {child.icon}
+                    {(isVisible || !isMobile) && (
+                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>{child.label}</span>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    return null;
+  };
 
   return (
     <>
@@ -293,349 +624,9 @@ const Sidebar = () => {
             )}
           </div>
           
-          {/* Navigation Menu */}
+          {/* Navigation Menu - قائمة العناصر الديناميكية حسب دور المستخدم */}
           <div className="flex flex-col w-full py-4 overflow-y-auto">
-            {/* Dashboard */}
-            <NavLink 
-              to="/dashboard" 
-              className={({ isActive }) => 
-                isActive 
-                  ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center px-4 py-3 text-blue-600 bg-gray-50 border-l-4 border-blue-500 gap-2` 
-                  : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-200 gap-2`
-              }
-            >
-              <DashboardIcon />
-              {(isVisible || !isMobile) && (
-                <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>لوحة التحكم</span>
-              )}
-            </NavLink>
-            
-            {/* Clients Section */}
-            <div className="w-full">
-              <button 
-                onClick={() => toggleSection('clients')}
-                className={`flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center w-full px-4 py-3 text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:text-blue-600`}
-              >
-                <div className={`flex items-center ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} gap-2`}>
-                  <ClientsIcon />
-                  {(isVisible || !isMobile) && (
-                    <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>العملاء</span>
-                  )}
-                </div>
-                {(isVisible || !isMobile) && (
-                  <ChevronDownIcon className={openSections.clients ? "transform rotate-180 ml-auto" : "ml-auto"} />
-                )}
-              </button>
-              
-              {openSections.clients && (
-            <div className={`${!isVisible && !isMobile ? 'flex flex-col items-center' : 'border-l-4 bg-gray-50 border-l-blue-200'}`}>
-                  <NavLink 
-                    to="/clients/new" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <NewClientIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>إضافة عميل جديد</span>
-                    )}
-                  </NavLink>
-                  <NavLink 
-                    to="/clients/all" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <AllClientsIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>عرض جميع العملاء</span>
-                    )}
-                  </NavLink>
-                  <NavLink 
-                    to="/clients/types" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <ClientTypesIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>عرض أنواع العملاء</span>
-                    )}
-                  </NavLink>
-                </div>
-              )}
-            </div>
-
-            {/* Cases Section */}
-            <div className="w-full">
-              <button 
-                onClick={() => toggleSection('cases')}
-                className={`flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center w-full px-4 py-3 text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:text-blue-600`}
-              >
-                <div className={`flex items-center ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} gap-2`}>
-                  <CasesIcon />
-                  {(isVisible || !isMobile) && (
-                    <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>القضايا</span>
-                  )}
-                </div>
-                {(isVisible || !isMobile) && (
-                  <ChevronDownIcon className={openSections.cases ? "transform rotate-180 ml-auto" : "ml-auto"} />
-                )}
-              </button>
-              
-              {openSections.cases && (
-                <div className={`${!isVisible && !isMobile ? 'flex flex-col items-center' : 'border-l-4 bg-gray-50 border-l-blue-200'}`}>
-                  <NavLink 
-                    to="/cases/new" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <NewCaseIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>إضافة قضية جديدة</span>
-                    )}
-                  </NavLink>
-                  <NavLink 
-                    to="/cases/all" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <AllCasesIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>عرض جميع القضايا</span>
-                    )}
-                  </NavLink>
-                  <NavLink 
-                    to="/cases/types" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <CaseTypesIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>أنواع القضايا</span>
-                    )}
-                  </NavLink>
-                </div>
-              )}
-            </div>
-
-            {/* Sessions Section */}
-            <NavLink 
-              to="/sessions" 
-              className={({ isActive }) => 
-                isActive 
-                  ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center px-4 py-3 text-blue-600 bg-blue-50 border-l-4 border-blue-500 gap-2` 
-                  : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-200 gap-2`
-              }
-            >
-              <SessionsIcon />
-              {(isVisible || !isMobile) && (
-                <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>الجلسات</span>
-              )}
-            </NavLink>
-
-            {/* Documents Section */}
-            <div className="w-full">
-              <button 
-                onClick={() => toggleSection('documents')}
-                className={`flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center w-full px-4 py-3 text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:text-blue-600`}
-              >
-                <div className={`flex items-center ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} gap-2`}>
-                  <DocumentsIcon />
-                  {(isVisible || !isMobile) && (
-                    <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>الوثائق</span>
-                  )}
-                </div>
-                {(isVisible || !isMobile) && (
-                  <ChevronDownIcon className={openSections.documents ? "transform rotate-180 ml-auto" : "ml-auto"} />
-                )}
-              </button>
-              
-              {openSections.documents && (
-                <div className={`${!isVisible && !isMobile ? 'flex flex-col items-center' : 'border-l-4 bg-gray-50 border-l-blue-200'}`}>
-                  <NavLink 
-                    to="/documents" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <DocumentsIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>المستندات</span>
-                    )}
-                  </NavLink>
-                  <NavLink 
-                    to="/files" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <FilesIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>الملفّـات</span>
-                    )}
-                  </NavLink>
-                </div>
-              )}
-            </div>
-
-            {/* Financial Section */}
-            <div className="w-full">
-              <button 
-                onClick={() => toggleSection('financial')}
-                className={`flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center w-full px-4 py-3 text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:text-blue-600`}
-              >
-                <div className={`flex items-center ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} gap-2`}>
-                  <InvoicesIcon />
-                  {(isVisible || !isMobile) && (
-                    <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>المالية</span>
-                  )}
-                </div>
-                {(isVisible || !isMobile) && (
-                  <ChevronDownIcon className={openSections.financial ? "transform rotate-180 ml-auto" : "ml-auto"} />
-                )}
-              </button>
-              
-              {openSections.financial && (
-                <div className={`${!isVisible && !isMobile ? 'flex flex-col items-center' : 'border-l-4 bg-gray-50 border-l-blue-200'}`}>
-                  <NavLink 
-                    to="/invoices" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <InvoicesIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>الفواتير</span>
-                    )}
-                  </NavLink>
-                  <NavLink 
-                    to="/payments" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <PaymentsIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>المدفوعات</span>
-                    )}
-                  </NavLink>
-                  <NavLink 
-                    to="/expenses" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <ExpensesIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>النفقات</span>
-                    )}
-                  </NavLink>
-                </div>
-              )}
-            </div>
-
-            {/* Notifications Section */}
-            <NavLink 
-              to="/notifications" 
-              className={({ isActive }) => 
-                isActive 
-                  ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center px-4 py-3 text-blue-600 bg-blue-50 border-l-4 border-blue-500 gap-2` 
-                  : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-200 gap-2`
-              }
-            >
-              <NotificationsIcon />
-              {(isVisible || !isMobile) && (
-                <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>الإشعارات</span>
-              )}
-            </NavLink>
-
-            {/* System Section */}
-            <div className="w-full">
-              <button 
-                onClick={() => toggleSection('system')}
-                className={`flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center w-full px-4 py-3 text-gray-700 transition-colors duration-200 hover:bg-gray-50 hover:text-blue-600`}
-              >
-                <div className={`flex items-center ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} gap-2`}>
-                  <SettingsIcon />
-                  {(isVisible || !isMobile) && (
-                    <span className={`text-base font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>النظام</span>
-                  )}
-                </div>
-                {(isVisible || !isMobile) && (
-                  <ChevronDownIcon className={openSections.system ? "transform rotate-180 ml-auto" : "ml-auto"} />
-                )}
-              </button>
-              
-              {openSections.system && (
-                <div className={`${!isVisible && !isMobile ? 'flex flex-col items-center' : 'border-l-4 bg-gray-50 border-l-blue-200'}`}>
-                  <NavLink 
-                    to="/users" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <UsersIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>المستخدمون</span>
-                    )}
-                  </NavLink>
-                  <NavLink 
-                    to="/settings" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <SettingsIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>الإعدادات</span>
-                    )}
-                  </NavLink>
-                  <NavLink 
-                    to="/support" 
-                    className={({ isActive }) => 
-                      isActive 
-                        ? `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-blue-600 ${!isVisible && !isMobile ? '' : 'border-l-4 border-blue-500'} gap-2` 
-                        : `flex ${!isVisible && !isMobile ? 'justify-center' : 'justify-start'} items-center ${!isVisible && !isMobile ? 'px-4' : 'px-8'} py-2 text-gray-600 hover:text-blue-600 gap-2`
-                    }
-                  >
-                    <HelpSupportIcon />
-                    {(isVisible || !isMobile) && (
-                      <span className={`text-sm font-medium font-['Inter'] ${!isVisible && !isMobile ? 'sr-only' : ''}`}>المساعدة والدعم</span>
-                    )}
-                  </NavLink>
-                </div>
-              )}
-            </div>
+            {getMenuItemsByRole().map(renderMenuItem)}
           </div>
         </div>
         

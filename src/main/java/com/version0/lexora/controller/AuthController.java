@@ -79,7 +79,7 @@ public class AuthController {
 
     /**
      * نقطة نهاية تسجيل الدخول
-     * @param credentials خريطة تحتوي على بيانات الدخول (البريد الإلكتروني، كلمة المرور)
+     * @param credentials خريطة تحتوي على بيانات الدخول (البريد الإلكتروني، كلمة مرور)
      * @return ResponseEntity يحتوي على رمز JWT وبيانات المستخدم أو رسالة خطأ
      */
     @PostMapping("/login")
@@ -275,6 +275,104 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "حدث خطأ أثناء جلب بيانات المستخدم الحالي: " + e.getMessage()));
+        }
+    }
+      /**
+     * نقطة نهاية لطلب استعادة كلمة المرور
+     * Endpoint for requesting password recovery
+     * 
+     * @param requestMap خريطة تحتوي على البريد الإلكتروني للمستخدم
+     * @return ResponseEntity يحتوي على رسالة تأكيد أو رسالة خطأ
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> requestMap) {
+        try {
+            // استخراج البريد الإلكتروني من الطلب
+            String email = requestMap.get("email");
+            if (email == null || email.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "البريد الإلكتروني مطلوب"));
+            }
+            
+            // Log for debugging
+            System.out.println("Received forgot password request for email: " + email);
+            
+            // استدعاء خدمة استعادة كلمة المرور
+            String message = authService.forgotPassword(email);
+            
+            // إرجاع رسالة نجاح
+            return ResponseEntity.ok(Map.of("message", message));
+        } catch (EntityNotFoundException e) {
+            // إذا لم يتم العثور على المستخدم، نعيد رسالة عامة لأسباب أمنية
+            System.out.println("User not found for email in forgot password: " + requestMap.get("email"));
+            return ResponseEntity.ok(Map.of("message", 
+                "إذا كان البريد الإلكتروني مرتبطًا بحساب في نظامنا، فسيتم إرسال رابط استعادة كلمة المرور."));
+        } catch (RuntimeException e) {
+            // خطأ في إرسال البريد الإلكتروني
+            System.err.println("Email sending error in forgot password: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.ok(Map.of("message", 
+                "تم معالجة طلب استعادة كلمة المرور، ولكن هناك مشكلة في إرسال البريد الإلكتروني. يرجى الاتصال بمسؤول النظام."));
+        } catch (Exception e) {
+            // أي خطأ آخر
+            System.err.println("Unexpected error in forgot password: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "حدث خطأ أثناء معالجة طلب استعادة كلمة المرور: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * نقطة نهاية للتحقق من صحة رمز استعادة كلمة المرور
+     * Endpoint to verify password reset token
+     * 
+     * @param token رمز استعادة كلمة المرور
+     * @return ResponseEntity يحتوي على حالة صلاحية الرمز
+     */
+    @GetMapping("/validate-reset-token")
+    public ResponseEntity<?> validateResetToken(@RequestParam String token) {
+        boolean isValid = authService.validateResetToken(token);
+        
+        if (isValid) {
+            return ResponseEntity.ok(Map.of("valid", true));
+        } else {
+            return ResponseEntity.badRequest().body(Map.of(
+                "valid", false,
+                "message", "رمز استعادة كلمة المرور غير صالح أو منتهي الصلاحية"
+            ));
+        }
+    }
+    
+    /**
+     * نقطة نهاية لإعادة تعيين كلمة المرور باستخدام الرمز
+     * Endpoint to reset password using token
+     * 
+     * @param requestMap خريطة تحتوي على الرمز وكلمة المرور الجديدة
+     * @return ResponseEntity يحتوي على رسالة تأكيد أو رسالة خطأ
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> requestMap) {
+        try {
+            // استخراج بيانات الطلب
+            String token = requestMap.get("token");
+            String newPassword = requestMap.get("password");
+            
+            // التحقق من توفر البيانات المطلوبة
+            if (token == null || token.isEmpty() || newPassword == null || newPassword.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "الرمز وكلمة المرور الجديدة مطلوبة"));
+            }
+            
+            // استدعاء خدمة إعادة تعيين كلمة المرور
+            String message = authService.resetPassword(token, newPassword);
+            
+            // إرجاع رسالة نجاح
+            return ResponseEntity.ok(Map.of("message", message));
+        } catch (RuntimeException e) {
+            // إذا كان الرمز غير صالح أو منتهي الصلاحية
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            // أي خطأ آخر
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "حدث خطأ أثناء إعادة تعيين كلمة المرور."));
         }
     }
 }

@@ -1,0 +1,383 @@
+@startuml Lexora Class Diagram
+
+' Styling
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classFontSize 12
+skinparam classFontName Arial
+skinparam classBackgroundColor #FEFECE
+skinparam classBorderColor #A80036
+skinparam arrowColor #A80036
+skinparam packageBackgroundColor #FAFAFA
+skinparam linetype ortho
+
+title Lexora - Law Firm Management System
+
+class Utilisateur {
+  -Long idUtilisateur
+  -String prenom
+  -String nom
+  -String telephone
+    -String email
+    -String motDePasseHash
+    -Boolean estActive
+    -LocalDateTime dateCreation
+    -LocalDateTime derniereConnexion
+    -Role role
+    +Set<Dossier> dossiersResponsable
+    
+    +Utilisateur()
+    +Utilisateur(String, String, String, String, Role)
+    +Long getIdUtilisateur()
+    +void setIdUtilisateur(Long)
+    +String getPrenom()
+    +void setPrenom(String) 
+    +String getNom() 
+    +void setNom(String)
+    +String getEmail()
+    +void setEmail(String)
+    +Role getRole()
+    +void setRole(Role)
+    +Boolean isEstActive()
+    +void setEstActive(Boolean)
+  }
+  
+  class Client {
+    -Long idClient
+    -String nom
+    -String contact
+    -String email
+    -String telephone
+    -String adresse
+    -String type
+    -String statut
+    -LocalDate dateCreation
+    +Set<Dossier> dossiers
+    
+    +Client()
+    +Client(String, String, String, String, String)
+    +Long getIdClient()
+    +void setIdClient(Long)
+    +String getNom()
+    +void setNom(String)
+    +String getEmail()
+    +void setEmail(String)
+    +String getTelephone()
+    +void setTelephone(String)
+    +String getType()
+    +void setType(String)
+    +String getStatut()
+    +void setStatut(String)
+    +Set<Dossier> getDossiers()
+  }
+  
+  class Dossier {
+    -Long idDossier
+    -String reference
+    -String titre
+    -String description
+    -String type
+    -String tribunal
+    -String avocat
+    -String statut
+    -String priorite
+    -LocalDate dateInitiale
+    -LocalDate dateCreation
+    +Set<Session> sessions
+    +Set<Document> documents
+    +Set<Facture> factures
+    
+    +Dossier()
+    +Dossier(String, String, Client, String, String, String)
+    +Long getIdDossier()
+    +void setIdDossier(Long)
+    +String getReference()
+    +void setReference(String)
+    +String getTitre()
+    +void setTitre(String)
+    +Client getClient()
+    +void setClient(Client)
+    +String getType()
+    +void setType(String)
+    +String getStatut()
+    +void setStatut(String)
+    +String getPriorite()
+    +void setPriorite(String)
+    +void addSession(Session)
+    +void addDocument(Document)
+    +void addFacture(Facture)
+  }
+  
+  class Session {
+    -Long idSession
+    -LocalDate date
+    -LocalTime heure
+    -String salle
+    -String tribunal
+    -String statut
+    -String notes
+    
+    +Session()
+    +Session(Dossier, LocalDate, LocalTime)
+    +Long getIdSession()
+    +void setIdSession(Long)
+    +Dossier getDossier()
+    +void setDossier(Dossier)
+    +LocalDate getDate()
+    +void setDate(LocalDate)
+    +LocalTime getHeure()
+    +void setHeure(LocalTime)
+    +String getStatut()
+    +void setStatut(String)
+    +String getNotes()
+    +void setNotes(String)
+  }
+  class Document {
+    -Long idDocument
+    -String nom
+    -String type
+    -String cheminFichier
+    -Long taille
+    -String statut
+    -LocalDateTime dateCreation
+    -Dossier dossier
+    
+    +Document()
+    +Document(String, String, String, Long)
+    +Long getIdDocument()
+    +void setIdDocument(Long)
+    +String getNom()
+    +void setNom(String)
+    +String getType() 
+    +void setType(String)
+    +String getCheminFichier()
+    +void setCheminFichier(String)
+    +Long getTaille()
+    +void setTaille(Long)
+    +String getStatut()
+    +void setStatut(String)
+    +Dossier getDossier()
+    +void setDossier(Dossier)
+    +LocalDateTime getDateCreation()
+    +void setDateCreation(LocalDateTime)
+  }
+    class Facture {
+    -Long idFacture
+    -String numero
+    -BigDecimal montantTotal
+    -BigDecimal montantPaye
+    -BigDecimal montantRestant
+    -String statut
+    -LocalDate dateEmission
+    -LocalDate dateEcheance
+    -String notes
+    +Set<ElementFacture> elements
+    +Set<Paiement> paiements
+    
+    +Facture()
+    +Facture(String, Client, BigDecimal)
+    +Long getIdFacture()
+    +void setIdFacture(Long)
+    +String getNumero()
+    +void setNumero(String)
+    +Client getClient()
+    +void setClient(Client)
+    +Dossier getDossier()
+    +void setDossier(Dossier)
+    +BigDecimal getMontantTotal()
+    +void setMontantTotal(BigDecimal)
+    +String getStatut()
+    +void setStatut(String)
+    +void addElement(ElementFacture)
+    +void addPaiement(Paiement)
+    +void calculerMontants()
+  }
+  
+  class ElementFacture {
+    -Long idElementFacture
+    -String description
+    -BigDecimal montant
+    -Integer quantite
+    -BigDecimal total
+    
+    +ElementFacture()
+    +ElementFacture(String, BigDecimal, Integer)
+    +Long getIdElement()
+    +void setIdElement(Long)
+    +String getDescription()
+    +void setDescription(String)
+    +BigDecimal getMontant()
+    +void setMontant(BigDecimal)
+    +Integer getQuantite()
+    +void setQuantite(Integer)
+    +BigDecimal calculerTotal()
+    +Facture getFacture()
+    +void setFacture(Facture)
+  }
+  
+  class Paiement {
+    -Long idPaiement
+    -String reference
+    -BigDecimal montant
+    -String methode
+    -LocalDate datePaiement
+    -String notes
+    -String statut
+    
+    +Paiement()
+    +Paiement(String, BigDecimal, String)
+    +Long getIdPaiement()
+    +void setIdPaiement(Long)
+    +String getReference()
+    +void setReference(String)
+    +BigDecimal getMontant()
+    +void setMontant(BigDecimal)
+    +String getMethode()
+    +void setMethode(String)
+    +LocalDate getDatePaiement()
+    +void setDatePaiement(LocalDate)
+    +String getStatut()
+    +void setStatut(String)
+    +Facture getFacture()
+    +void setFacture(Facture)
+  }
+  
+  class Depense {
+    -Long idDepense
+    -String titre
+    -String categorie
+    -BigDecimal montant
+    -String devise
+    -LocalDate date
+    -String description
+    -String beneficiaire
+    -String statut
+    
+    +Depense()
+    +Depense(String, BigDecimal, String)
+    +Long getIdDepense()
+    +void setIdDepense(Long)
+    +String getTitre()
+    +void setTitre(String)
+    +String getCategorie()
+    +void setCategorie(String)
+    +BigDecimal getMontant()
+    +void setMontant(BigDecimal)
+    +String getDevise()
+    +void setDevise(String)
+    +Dossier getDossier()
+    +void setDossier(Dossier)
+  }
+    enum Role {
+    SUPER_ADMIN
+    ADMINISTRATEUR
+    AVOCAT
+    ASSISTANT_JURIDIQUE
+    COMPTABLE
+    ASSISTANT_ADMIN
+    INVITE
+    
+    -String displayName
+    -String description
+    -int permissionLevel
+    
+    +Role(String, String, int)
+    +String getDisplayName()
+    +String getDescription()
+    +int getPermissionLevel()
+    +boolean hasPermission(Role)
+  }
+  
+  class Notification {
+    -Long idNotification
+    -String titre
+    -String message
+    -String type
+    -Boolean lue
+    -LocalDateTime dateCreation
+    
+    +Notification()
+    +Notification(String, String, String)
+    +Long getIdNotification()
+    +void setIdNotification(Long)
+    +String getTitre()
+    +void setTitre(String)
+    +String getMessage()
+    +void setMessage(String)
+    +String getType()
+    +void setType(String)
+    +Boolean isLue()
+    +void setLue(Boolean)
+    +LocalDateTime getDateCreation()
+    +void setDateCreation(LocalDateTime)
+  }
+  
+  class Permission {
+    -Long idPermission
+    -PermissionAction action
+    -String ressource
+    -Role role
+    
+    +Permission()
+    +Permission(PermissionAction, String, Role)
+    +Long getIdPermission()
+    +void setIdPermission(Long)
+    +PermissionAction getAction()
+    +void setAction(PermissionAction)
+    +String getRessource()
+    +void setRessource(String)
+    +Role getRole()
+    +void setRole(Role)
+  }
+  
+  enum PermissionAction {
+    CREATE
+    READ
+    UPDATE
+    DELETE
+  }
+  
+  class Audit {
+    -Long idAudit
+    -String action
+    -String entite
+    -Long idEntite
+    -String detailsAvant
+    -String detailsApres
+    -Long utilisateurId
+    -String utilisateurNom
+    -LocalDateTime dateAction
+    -String adresseIp
+    
+    +Audit()
+    +Audit(String, String, Long)
+    +Long getIdAudit()
+    +void setIdAudit(Long)
+    +String getAction()
+    +void setAction(String)
+    +String getEntite()
+    +void setEntite(String)
+    +Long getIdEntite()
+    +void setIdEntite(Long)
+    +String getDetailsAvant()
+    +void setDetailsAvant(String)
+    +LocalDateTime getDateAction()
+    +void setDateAction(LocalDateTime)
+  }
+' Relationships
+Utilisateur "1" -- "0..*" Dossier : gère >
+Client "1" -- "0..*" Dossier : possède >
+Dossier "1" -- "0..*" Session : a >
+Dossier "1" -- "0..*" Document : contient >
+Dossier "1" -- "0..*" Facture : associé à >
+Client "1" -- "0..*" Facture : facturé >
+Facture "1" -- "0..*" ElementFacture : composé de >
+Facture "1" -- "0..*" Paiement : reçoit >
+Utilisateur "1" -- "0..*" Notification : reçoit >
+
+' Role and PermissionAction are enums
+Utilisateur -- Role : a >
+Permission -- Role : associé à >
+Permission -- PermissionAction : défini par >
+
+@enduml

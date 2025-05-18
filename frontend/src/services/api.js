@@ -103,7 +103,7 @@ const authService = {
   // تسجيل الدخول
   login: (credentials) => api.post('/auth/login', credentials),
   
-  // تسجيل مستخدم جديد
+  // تسجيل مستخدم جديد - سيكون متاحًا فقط للمسؤول
   register: (userData) => api.post('/auth/register', userData),
   
   // الحصول على بيانات المستخدم الحالي
@@ -113,7 +113,16 @@ const authService = {
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-  }
+  },
+  
+  // طلب استعادة كلمة المرور
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  
+  // التحقق من صحة رمز استعادة كلمة المرور
+  validateResetToken: (token) => api.get(`/auth/validate-reset-token?token=${token}`),
+  
+  // إعادة تعيين كلمة المرور باستخدام الرمز
+  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password })
 };
 
 // خدمات الملفات

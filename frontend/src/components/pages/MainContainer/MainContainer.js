@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import UserProfile from '../UserProfile/UserProfile';
 import EditProfile from '../UserProfile/EditProfile/EditProfile';
-import ChangePassword from '../UserProfile/ChangePassword/ChangePassword';
+import ChangePassword from '../../features/auth/ChangePassword';
 import Support from '../Support/Support';
 import AllClients from '../Clients/AllClients/AllClients';
 import ClientTypes from '../Clients/ClientTypes/ClientTypes';

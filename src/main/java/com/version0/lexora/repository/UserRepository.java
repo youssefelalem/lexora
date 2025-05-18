@@ -23,4 +23,13 @@ public interface UserRepository extends JpaRepository<Utilisateur, Long> {
     // تعريف طريقة مخصصة للبحث عن المستخدمين حسب الدور // Déclaration d'une méthode personnalisée pour rechercher des utilisateurs par leur rôle
     // List<Utilisateur>: نوع الإرجاع هو قائمة من المستخدمين // List<Utilisateur>: Le type de retour est une liste d'utilisateurs
     List<Utilisateur> findByRole(Role role); // اسم الطريقة يتبع اصطلاحات Spring Data JPA لتوليد الاستعلام تلقائيًا // Le nom de la méthode suit les conventions de Spring Data JPA pour générer automatiquement la requête
+    
+    /**
+     * طريقة للبحث عن مستخدم بواسطة رمز إعادة تعيين كلمة المرور
+     * Method to find a user by reset token
+     * 
+     * @param token رمز إعادة التعيين للبحث عنه
+     * @return Optional<Utilisateur> مستخدم اختياري مع الرمز المحدد
+     */
+    Optional<Utilisateur> findByTokenReinitialisation(String token);
 }
