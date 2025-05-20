@@ -2,99 +2,101 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clientService } from '../../../../services/api';
 
-// تعريف ثوابت للفئات المشتركة لتقليل التكرار
-const BUTTON_CLASSES = "flex items-center px-4 py-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700";
-const BADGE_CLASSES = {
-  blue: "px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full",
-  green: "px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full",
-  yellow: "px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full",
-  red: "px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full",
-  gray: "px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-full",
-  purple: "px-2 py-1 text-xs font-medium text-purple-800 bg-purple-100 rounded-full",
+/**
+ * تنسيق التاريخ بالصيغة الفرنسية (DD-MM-YYYY)
+ * @param {string} dateString - التاريخ بصيغة النص
+ * @returns {string} - التاريخ المنسق
+ */
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    return new Intl.DateTimeFormat('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(date);
+  } catch (err) {
+    console.error('Error formatting date:', err);
+    return '-';
+  }
 };
 
+/**
+ * مكون عرض جميع العملاء
+ * يتيح عرض قائمة العملاء مع إمكانية البحث والتصفية وإدارة العملاء
+ */
 const AllClients = () => {
   const navigate = useNavigate();
-  // حالة العملاء وتحميل البيانات
+  
+  // === حالة البيانات ===
+  // حالة قائمة العملاء والتحميل
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // حالة البحث والفلترة
+  // حالة البحث والتصفية
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('الكل');
   const [filterStatus, setFilterStatus] = useState('الكل');
 
-  // جلب بيانات العملاء من الخلفية
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        setLoading(true);
-        const response = await clientService.getAllClients();
-        setClients(response.data);
-        setError(null);
-      } catch (err) {
-        setError('حدث خطأ أثناء جلب بيانات العملاء');
-        console.error('خطأ في جلب العملاء:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchClients();
-  }, []);
-
-  // خيارات الفلترة
+  // === الثوابت والخيارات ===
+  // خيارات أنواع وحالات العملاء
   const clientTypes = ['الكل', 'شركة', 'فرد', 'مؤسسة'];
   const statusTypes = ['الكل', 'نشط', 'معلق', 'غير نشط'];
 
-  // تصفية العملاء حسب البحث والفلترة
-  const filteredClients = clients.filter(client => {
-    const matchesSearch = 
-      client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.phone?.includes(searchTerm);
-    
-    const matchesType = filterType === 'الكل' || client.type === filterType;
-    const matchesStatus = filterStatus === 'الكل' || client.status === filterStatus;
-    
-    return matchesSearch && matchesType && matchesStatus;
-  });
-
-  // حالة العميل إلى لون
+  // === الوظائف المساعدة ===
+  /**
+   * تحويل حالة العميل إلى صنف CSS
+   * @param {string} status - حالة العميل
+   * @returns {string} - صنف CSS المناسب
+   */
   const getStatusBadgeClass = status => {
     switch(status) {
       case 'نشط':
-        return BADGE_CLASSES.green;
+        return "px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full";
       case 'معلق':
-        return BADGE_CLASSES.yellow;
+        return "px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full";
       case 'غير نشط':
-        return BADGE_CLASSES.red;
+        return "px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full";
       default:
-        return BADGE_CLASSES.gray;
+        return "px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-full";
     }
   };
 
-  // نوع العميل إلى لون
+  /**
+   * تحويل نوع العميل إلى صنف CSS
+   * @param {string} type - نوع العميل
+   * @returns {string} - صنف CSS المناسب
+   */
   const getTypeBadgeClass = type => {
     switch(type) {
       case 'شركة':
-        return BADGE_CLASSES.blue;
+        return "px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full";
       case 'فرد':
-        return BADGE_CLASSES.purple;
+        return "px-2 py-1 text-xs font-medium text-purple-800 bg-purple-100 rounded-full";
       case 'مؤسسة':
-        return BADGE_CLASSES.gray;
+        return "px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-full";
       default:
-        return BADGE_CLASSES.gray;
+        return "px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-full";
     }
   };
 
-  // الحرف الأول من اسم العميل
+  /**
+   * استخراج الحرف الأول من اسم العميل
+   * @param {string} name - اسم العميل
+   * @returns {string} - الحرف الأول
+   */
   const getInitial = name => {
     return name?.charAt(0) || '';
   };
 
-  // لون خلفية الحرف الأول حسب نوع العميل
+  /**
+   * تحديد لون خلفية الحرف الأول حسب نوع العميل
+   * @param {string} type - نوع العميل
+   * @returns {string} - صنف CSS للون الخلفية
+   */
   const getInitialBgClass = type => {
     switch(type) {
       case 'شركة':
@@ -108,11 +110,98 @@ const AllClients = () => {
     }
   };
 
-  // تحويل إلى صفحة إضافة عميل جديد
-  const handleAddClient = () => {
-    navigate('/clients/new');
+  /**
+   * حذف عميل من قاعدة البيانات
+   * @param {number} clientId - معرف العميل
+   */
+  const deleteClient = async (clientId) => {
+    if (!clientId) {
+      console.error('معرف العميل غير صالح');
+      return;
+    }
+    if (!window.confirm('هل أنت متأكد أنك تريد حذف هذا العميل؟')) {
+      return;
+    }
+    try {
+      await clientService.deleteClient(clientId);
+      // تحديث قائمة العملاء بعد الحذف
+      setClients(clients.filter(client => client.idClient !== clientId));
+    } catch (err) {
+      console.error('خطأ في حذف العميل:', err);
+      setError('حدث خطأ أثناء حذف العميل');
+    }
   };
-  
+
+  // === تأثيرات جانبية ===
+  // جلب بيانات العملاء عند تحميل المكون
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        // التحقق من وجود التوكن
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) {
+          setError('يجب تسجيل الدخول أولاً');
+          navigate('/login');
+          return;
+        }
+
+        setLoading(true);
+        const response = await clientService.getAllClients();
+        
+        if (!response || !response.data) {
+          throw new Error('لم يتم استلام بيانات صحيحة من الخادم');
+        }
+
+        setClients(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('خطأ في جلب العملاء:', err);
+        
+        if (err.response) {
+          // خطأ من الخادم مع رد
+          switch (err.response.status) {
+            case 401:
+              setError('انتهت صلاحية الجلسة. يرجى إعادة تسجيل الدخول');
+              // مسح التوكن وإعادة التوجيه لتسجيل الدخول
+              localStorage.removeItem('token');
+              sessionStorage.removeItem('token');
+              navigate('/login');
+              break;
+            case 403:
+              setError('ليس لديك صلاحية للوصول إلى هذه البيانات');
+              break;
+            default:
+              setError('حدث خطأ أثناء جلب بيانات العملاء');
+          }
+        } else if (err.request) {
+          // لم يتم تلقي رد من الخادم
+          setError('لا يمكن الاتصال بالخادم');
+        } else {
+          // خطأ في إعداد الطلب
+          setError('حدث خطأ غير متوقع');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClients();
+  }, [navigate]);
+
+  // تصفية العملاء حسب البحث والفلترة
+  const filteredClients = clients.filter(client => {
+    const matchesSearch = 
+      client.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.telephone?.includes(searchTerm);
+    
+    const matchesType = filterType === 'الكل' || client.type === filterType;
+    const matchesStatus = filterStatus === 'الكل' || client.statut === filterStatus;
+    
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  // === تصيير المكون ===
   return (
     <div className="p-4 bg-white rounded-lg shadow-sm">
       <h1 className="mb-6 text-2xl font-bold text-gray-800">جميع العملاء</h1>
@@ -142,8 +231,8 @@ const AllClients = () => {
               onChange={(e) => setFilterType(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {clientTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
+              {clientTypes.map((type, index) => (
+                <option key={`type-${type}-${index}`} value={type}>{type}</option>
               ))}
             </select>
           </div>
@@ -155,16 +244,16 @@ const AllClients = () => {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {statusTypes.map(status => (
-                <option key={status} value={status}>{status}</option>
+              {statusTypes.map((status, index) => (
+                <option key={`status-${status}-${index}`} value={status}>{status}</option>
               ))}
             </select>
           </div>
         </div>
         
         <button 
-          onClick={handleAddClient}
-          className={BUTTON_CLASSES}
+          onClick={() => navigate('/clients/new')}
+          className="flex items-center px-4 py-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
         >
           <svg className="w-5 h-5 ml-1" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -205,15 +294,15 @@ const AllClients = () => {
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {filteredClients.map(client => (
-                  <tr key={client.id} className="text-sm text-gray-700 hover:bg-gray-50">
+                {filteredClients.map((client, index) => (
+                  <tr key={client.idClient || `client-${index}`} className="text-sm text-gray-700 hover:bg-gray-50">
                     <td className="px-4 py-3 border-b border-gray-200">
                       <div className="flex items-center">
                         <div className={`flex items-center justify-center flex-shrink-0 w-8 h-8 ml-2 font-medium text-white rounded-full ${getInitialBgClass(client.type)}`}>
-                          {getInitial(client.name)}
+                          {getInitial(client.nom)}
                         </div>
                         <div>
-                          <div className="font-medium">{client.name}</div>
+                          <div className="font-medium">{client.nom}</div>
                           <div className="text-xs text-gray-500">{client.contact}</div>
                         </div>
                       </div>
@@ -224,35 +313,45 @@ const AllClients = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-left border-b border-gray-200 dir-ltr">{client.email}</td>
-                    <td className="px-4 py-3 text-left border-b border-gray-200 dir-ltr">{client.phone}</td>
-                    <td className="px-4 py-3 text-center border-b border-gray-200">{client.cases || 0}</td>
+                    <td className="px-4 py-3 text-left border-b border-gray-200 dir-ltr">{client.telephone}</td>
+                    <td className="px-4 py-3 text-center border-b border-gray-200">{client.nombreDossiers || 0}</td>
                     <td className="px-4 py-3 border-b border-gray-200">
-                      <span className={getStatusBadgeClass(client.status)}>
-                        {client.status}
+                      <span className={getStatusBadgeClass(client.statut)}>
+                        {client.statut}
                       </span>
                     </td>
                     <td className="px-4 py-3 border-b border-gray-200">
-                      {client.created ? client.created : new Date(client.createdAt).toLocaleDateString('ar-EG')}
+                      {formatDate(client.dateCreation)}
                     </td>
                     <td className="px-4 py-3 border-b border-gray-200 whitespace-nowrap">
-                      <div className="flex items-center space-x-3 space-x-reverse">
-                        {/* عرض */}
-                        <button className="text-blue-600 hover:text-blue-900" title="عرض التفاصيل">
+                      <div className="flex items-center space-x-3 space-x-reverse">                        {/* عرض */}
+                        <button 
+                          onClick={() => navigate(`/clients/${client.idClient}`)}
+                          className="text-blue-600 hover:text-blue-900" 
+                          title="عرض التفاصيل"
+                        >
                           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </button>
-                        
-                        {/* تعديل */}
-                        <button className="text-yellow-600 hover:text-yellow-900" title="تعديل">
+                          {/* تعديل */}                        <button 
+                          onClick={() => navigate(`/clients/${client.idClient}/edit`)} 
+                          className="text-yellow-600 hover:text-yellow-900" 
+                          title="تعديل"
+                        >
                           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
-                        
-                        {/* حذف */}
-                        <button className="text-red-600 hover:text-red-900" title="حذف">
+                          {/* حذف */}
+                        <button 
+                          onClick={() => {
+                              deleteClient(client.idClient);
+                          }} 
+                          className="text-red-600 hover:text-red-900" 
+                          title="حذف"
+                        >
                           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
@@ -271,27 +370,6 @@ const AllClients = () => {
                 )}
               </tbody>
             </table>
-          </div>
-          
-          {/* ترقيم الصفحات */}
-          <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-gray-600">
-              عرض <span className="font-medium">{filteredClients.length}</span> من أصل <span className="font-medium">{clients.length}</span> عميل
-            </div>
-            <div className="flex space-x-1 space-x-reverse">
-              <button className="px-3 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">
-                السابق
-              </button>
-              <button className="px-3 py-1 text-sm text-white bg-blue-600 border border-blue-600 rounded-md">
-                1
-              </button>
-              <button className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                2
-              </button>
-              <button className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                التالي
-              </button>
-            </div>
           </div>
         </>
       )}

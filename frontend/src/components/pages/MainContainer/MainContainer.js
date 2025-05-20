@@ -7,6 +7,8 @@ import Support from '../Support/Support';
 import AllClients from '../Clients/AllClients/AllClients';
 import ClientTypes from '../Clients/ClientTypes/ClientTypes';
 import NewClient from '../Clients/NewClient/NewClient';
+import EditClient from '../Clients/EditClient/EditClient';
+import ClientDetails from '../Clients/ClientDetails/ClientDetails';
 import AllCases from '../Cases/AllCases/AllCases';
 import CaseTypes from '../Cases/CaseTypes/CaseTypes';
 import NewCase from '../Cases/NewCase/NewCase';
@@ -312,6 +314,8 @@ const MainContainer = () => {
           <Route path="/clients/all" element={<AllClients />} />
           <Route path="/clients/types" element={<ClientTypes />} />
           <Route path="/clients/new" element={<NewClient />} />
+          <Route path="/clients/:id/edit" element={<EditClient />} />
+          <Route path="/clients/:id" element={<ClientDetails />} />
           <Route path="/cases/new" element={<NewCase />} />
           <Route path="/cases/all" element={<AllCases />} />
           <Route path="/cases/types" element={<CaseTypes />} />

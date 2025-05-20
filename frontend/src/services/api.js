@@ -1,30 +1,60 @@
 import axios from 'axios';
 
+// Get base URL from environment or default to localhost
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+
 // إعداد عميل axios مع الإعدادات الافتراضية
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable sending cookies with requests
 });
 
 // اعتراض الطلبات لإضافة رمز المصادقة
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// اعتراض الاستجابات للتعامل مع أخطاء المصادقة
+// Handle API response errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      // يمكننا هنا توجيه المستخدم لصفحة تسجيل الدخول إذا لزم الأمر
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          // Clear tokens from both storages
+          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
+          
+          // If we're not already on the login page, redirect to it
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
+          break;
+          
+        case 403:
+          console.error('Access forbidden:', error.response.data);
+          break;
+          
+        default:
+          console.error('API Error:', error.response.data);
+          break;
+      }
+    } else if (error.request) {
+      // Request was made but no response received
+      console.error('No response received:', error.request);
+    } else {
+      // Error in setting up the request
+      console.error('Request setup error:', error.message);
     }
+
+    // Forward the error to be handled by the component
     return Promise.reject(error);
   }
 );
