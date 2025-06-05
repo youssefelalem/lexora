@@ -84,7 +84,6 @@ const EditUser = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-
   // معالجة تقديم النموذج
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,6 +91,13 @@ const EditUser = () => {
     setError(null);
 
     try {
+      // التحقق من صحة البيانات
+      if (!formData.role || formData.role.trim() === '') {
+        openErrorModal('خطأ في البيانات', 'يرجى اختيار دور للمستخدم');
+        setSaving(false);
+        return;
+      }
+
       // تحضير البيانات للإرسال
       const userData = {
         prenom: formData.prenom.trim() || null,
@@ -141,8 +147,7 @@ const EditUser = () => {
       'ASSISTANT_JURIDIQUE': 'مساعد قانوني'
     };
     return roles[role] || role;
-  };
-  // الأدوار المتاحة في النظام
+  };  // الأدوار المتاحة في النظام
   const availableRoles = [
     { value: 'ADMINISTRATEUR', label: 'مدير النظام' },
     { value: 'AVOCAT', label: 'محامي' },
@@ -322,38 +327,36 @@ const EditUser = () => {
           <h2 className="mb-4 text-lg font-medium">إعدادات الحساب</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">الدور</label>
-              <select
+              <label className="block mb-1 text-sm font-medium text-gray-700">الدور</label>              <select
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={formData.role === 'ADMINISTRATEUR' || formData.role === 'ADMIN' || formData.role === 'SUPER_ADMIN'}
+                disabled={formData.role === 'ADMINISTRATEUR'}
               >
                 {availableRoles.map(role => (
                   <option key={role.value} value={role.value}>{role.label}</option>
                 ))}
               </select>
-              {(formData.role === 'ADMINISTRATEUR' || formData.role === 'ADMIN' || formData.role === 'SUPER_ADMIN') && (
+              {formData.role === 'ADMINISTRATEUR' && (
                 <p className="mt-1 text-xs text-gray-500">لا يمكن تغيير دور مدير النظام</p>
               )}
             </div>
             <div className="flex items-center">
-              <div className="flex items-center">
-                <input
+              <div className="flex items-center">                <input
                   id="estActive"
                   name="estActive"
                   type="checkbox"
                   checked={formData.estActive}
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  disabled={formData.role === 'ADMINISTRATEUR' || formData.role === 'ADMIN' || formData.role === 'SUPER_ADMIN'}
+                  disabled={formData.role === 'ADMINISTRATEUR'}
                 />
                 <label htmlFor="estActive" className="block mr-2 text-sm text-gray-700">
                   حساب نشط
                 </label>
               </div>
-              {(formData.role === 'ADMINISTRATEUR' || formData.role === 'ADMIN' || formData.role === 'SUPER_ADMIN') && (
+              {formData.role === 'ADMINISTRATEUR' && (
                 <p className="mr-4 text-xs text-gray-500">لا يمكن تغيير حالة حساب مدير النظام</p>
               )}
             </div>
