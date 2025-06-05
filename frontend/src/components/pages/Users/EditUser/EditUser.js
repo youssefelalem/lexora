@@ -133,26 +133,20 @@ const EditUser = () => {
       setSaving(false);
     }
   };
-
   // ترجمة الأدوار
   const translateRole = (role) => {
     const roles = {
-      'SUPER_ADMIN': 'مدير النظام الرئيسي',
-      'ADMIN': 'مدير النظام',
       'ADMINISTRATEUR': 'مدير النظام',
       'AVOCAT': 'محامي',
-      'ASSISTANT_JURIDIQUE': 'مساعد قانوني',
-      'COMPTABLE': 'محاسب'
+      'ASSISTANT_JURIDIQUE': 'مساعد قانوني'
     };
     return roles[role] || role;
   };
-
   // الأدوار المتاحة في النظام
   const availableRoles = [
     { value: 'ADMINISTRATEUR', label: 'مدير النظام' },
     { value: 'AVOCAT', label: 'محامي' },
-    { value: 'ASSISTANT_JURIDIQUE', label: 'مساعد قانوني' },
-    { value: 'COMPTABLE', label: 'محاسب' }
+    { value: 'ASSISTANT_JURIDIQUE', label: 'مساعد قانوني' }
   ];
 
   // فتح نافذة الخطأ

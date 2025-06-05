@@ -9,8 +9,7 @@ import {
 
 const NewUser = () => {
   const navigate = useNavigate();
-  
-  // حالة بيانات المستخدم الجديد
+    // حالة بيانات المستخدم الجديد
   const [userData, setUserData] = useState({
     name: '', // الاسم الكامل (سيتم تقسيمه إلى اسم أول واسم أخير في المعالجة)
     email: '',
@@ -206,19 +205,12 @@ const NewUser = () => {
       setIsSubmitting(false);
     }
   };
-  
-  // ترجمة الدور إلى العربية
+    // ترجمة الدور إلى العربية
   const translateRole = (role) => {
     const roles = {
-      'admin': 'مدير النظام',
       'administrateur': 'مدير النظام',
-      'super_admin': 'مدير النظام الرئيسي',
-      'lawyer': 'محامي',
       'avocat': 'محامي',
-      'assistant': 'مساعد',
-      'assistant_juridique': 'مساعد قانوني',
-      'secretary': 'سكرتير',
-      'comptable': 'محاسب'
+      'assistant_juridique': 'مساعد قانوني'
     };
     return roles[role.toLowerCase()] || role;
   };
@@ -353,8 +345,7 @@ const NewUser = () => {
             <div>
               <label htmlFor="role" className="block mb-1 text-sm font-medium text-gray-700">
                 الدور <span className="text-red-600">*</span>
-              </label>
-              <select
+              </label>              <select
                 id="role"
                 name="role"
                 value={userData.role}
@@ -364,10 +355,8 @@ const NewUser = () => {
                 }`}
               >
                 <option value="administrateur">مدير النظام</option>
-                <option value="super_admin">مدير النظام الرئيسي</option>
                 <option value="avocat">محامي</option>
                 <option value="assistant_juridique">مساعد قانوني</option>
-                <option value="comptable">محاسب</option>
               </select>
               {errors.role && (
                 <p className="mt-1 text-sm text-red-600">{errors.role}</p>

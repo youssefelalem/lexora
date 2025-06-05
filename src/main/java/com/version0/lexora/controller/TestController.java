@@ -12,7 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Controlador de prueba para verificar la autenticación JWT y los niveles de acceso
+ * Controlador de prueba para verificar la autenticación JWT y los niveles de
+ * acceso
  * وحدة تحكم اختبار للتحقق من مصادقة JWT ومستويات الوصول
  */
 @RestController
@@ -38,13 +39,13 @@ public class TestController {
     @GetMapping("/authenticated")
     public ResponseEntity<Map<String, Object>> authenticatedEndpoint() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("message", "أنت مصادق عليه بنجاح!");
         response.put("username", authentication.getName());
         response.put("roles", authentication.getAuthorities());
         response.put("timestamp", System.currentTimeMillis());
-        
+
         return ResponseEntity.ok(response);
     }
 
@@ -81,7 +82,7 @@ public class TestController {
      * نقطة نهاية تتطلب أدوارًا متعددة
      */
     @GetMapping("/multi-role")
-    @PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'AVOCAT', 'COMPTABLE')")
+    @PreAuthorize("hasAnyRole('ADMINISTRATEUR', 'AVOCAT', 'ASSISTANT_JURIDIQUE')")
     public ResponseEntity<Map<String, String>> multiRoleAccess() {
         Map<String, String> response = new HashMap<>();
         response.put("message", "لديك وصول إلى هذه النقطة النهائية متعددة الأدوار!");

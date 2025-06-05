@@ -6,9 +6,9 @@ const API_BASE_URL = "http://localhost:8080";
 
 // التعريف بالأدوار المتاحة في النظام
 export const ROLES = {
-  ADMIN: 'ROLE_ADMIN',       // مشرف النظام
-  AVOCAT: 'ROLE_AVOCAT',     // محامي
-  SECRETAIRE: 'ROLE_SECRETAIRE' // سكرتير
+  ADMIN: 'ROLE_ADMIN',                    // مدير النظام
+  AVOCAT: 'ROLE_AVOCAT',                  // محامي
+  SECRETAIRE: 'ROLE_SECRETAIRE'           // مساعد قانوني (يُعرف أيضاً كسكرتير)
 };
 
 // إنشاء سياق المصادقة
