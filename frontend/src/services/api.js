@@ -128,6 +128,43 @@ const clientService = {
   getClientsByStatus: (status) => api.get(`/clients/statut/${status}`)
 };
 
+// خدمات أنواع العملاء
+const clientTypeService = {
+  // الحصول على جميع أنواع العملاء
+  getAllClientTypes: () => api.get('/client-types'),
+  
+  // الحصول على أنواع العملاء مع التقسيم إلى صفحات
+  getAllClientTypesPaginated: (page = 0, size = 10, sortBy = 'name', sortDir = 'asc') => 
+    api.get(`/client-types/paginated?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`),
+  
+  // الحصول على نوع عميل محدد بالمعرف
+  getClientTypeById: (id) => api.get(`/client-types/${id}`),
+  
+  // الحصول على نوع عميل بالاسم
+  getClientTypeByName: (name) => api.get(`/client-types/by-name/${name}`),
+  
+  // إنشاء نوع عميل جديد
+  createClientType: (clientTypeData) => api.post('/client-types', clientTypeData),
+  
+  // تحديث نوع عميل
+  updateClientType: (id, clientTypeData) => api.put(`/client-types/${id}`, clientTypeData),
+  
+  // حذف نوع عميل
+  deleteClientType: (id) => api.delete(`/client-types/${id}`),
+  
+  // البحث في أنواع العملاء
+  searchClientTypes: (searchTerm) => api.get(`/client-types/search?searchTerm=${encodeURIComponent(searchTerm)}`),
+  
+  // الحصول على إجمالي عدد أنواع العملاء
+  getTotalClientTypesCount: () => api.get('/client-types/count'),
+  
+  // تحديث عدد العملاء لنوع معين
+  updateClientCount: (id, clientCount) => api.patch(`/client-types/${id}/client-count?clientCount=${clientCount}`),
+  
+  // التحقق من وجود نوع عميل بالاسم
+  existsByName: (name) => api.get(`/client-types/exists/${encodeURIComponent(name)}`)
+};
+
 // خدمات المصادقة
 const authService = {
   // تسجيل الدخول
@@ -402,6 +439,7 @@ export {
   authService,
   userService,
   clientService,
+  clientTypeService,
   dossierService,
   documentService,
   depenseService,

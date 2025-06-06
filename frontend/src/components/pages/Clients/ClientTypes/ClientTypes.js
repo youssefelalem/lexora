@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { clientTypeService } from '../../../../services/api';
 
 // تعريف ثوابت للفئات المشتركة لتقليل التكرار
 const BUTTON_CLASSES = "flex items-center px-4 py-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700";
@@ -12,49 +13,10 @@ const BADGE_CLASSES = {
 };
 
 const ClientTypes = () => {
-  // بيانات نموذجية لأنواع العملاء
-  const [clientTypes, setClientTypes] = useState([
-    { 
-      id: 1, 
-      name: 'شركة', 
-      description: 'شركات تجارية أو صناعية',
-      count: 15,
-      created: '10-01-2024',
-      color: 'bg-blue-600'
-    },
-    { 
-      id: 2, 
-      name: 'فرد', 
-      description: 'عملاء من الأفراد',
-      count: 24,
-      created: '10-01-2024',
-      color: 'bg-purple-600'
-    },
-    { 
-      id: 3, 
-      name: 'مؤسسة', 
-      description: 'مؤسسات وجمعيات غير ربحية',
-      count: 8,
-      created: '15-01-2024',
-      color: 'bg-gray-600'
-    },
-    { 
-      id: 4, 
-      name: 'حكومي', 
-      description: 'جهات ومؤسسات حكومية',
-      count: 5,
-      created: '20-02-2024',
-      color: 'bg-green-600'
-    },
-    { 
-      id: 5, 
-      name: 'شراكة', 
-      description: 'شراكة بين عدة كيانات',
-      count: 3,
-      created: '05-03-2024',
-      color: 'bg-yellow-600'
-    },
-  ]);
+  // حالة البيانات والتحميل
+  const [clientTypes, setClientTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // حالة البحث
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,27 +24,47 @@ const ClientTypes = () => {
   // حالة العرض للنموذج
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [currentType, setCurrentType] = useState({ name: '', description: '', color: 'bg-blue-600' });
+  const [currentType, setCurrentType] = useState({ name: '', description: '', color: '#3B82F6' });
   
   // خيارات الألوان
   const colorOptions = [
-    { name: 'أزرق', class: 'bg-blue-600' },
-    { name: 'أرجواني', class: 'bg-purple-600' },
-    { name: 'رمادي', class: 'bg-gray-600' },
-    { name: 'أخضر', class: 'bg-green-600' },
-    { name: 'أصفر', class: 'bg-yellow-600' },
-    { name: 'أحمر', class: 'bg-red-600' }
+    { name: 'أزرق', class: 'bg-blue-600', value: '#3B82F6' },
+    { name: 'أرجواني', class: 'bg-purple-600', value: '#9333EA' },
+    { name: 'رمادي', class: 'bg-gray-600', value: '#4B5563' },
+    { name: 'أخضر', class: 'bg-green-600', value: '#059669' },
+    { name: 'أصفر', class: 'bg-yellow-600', value: '#D97706' },
+    { name: 'أحمر', class: 'bg-red-600', value: '#DC2626' }
   ];
+
+  // تحميل البيانات عند التحميل الأول
+  useEffect(() => {
+    loadClientTypes();
+  }, []);
+
+  // دالة تحميل أنواع العملاء من API
+  const loadClientTypes = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await clientTypeService.getAllClientTypes();
+      setClientTypes(response.data);
+    } catch (err) {
+      console.error('خطأ في تحميل أنواع العملاء:', err);
+      setError('فشل في تحميل أنواع العملاء. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // تصفية أنواع العملاء حسب البحث
   const filteredTypes = clientTypes.filter(type =>
-    type.name.includes(searchTerm) || 
-    type.description.includes(searchTerm)
+    type.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    type.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // إضافة نوع عميل جديد
   const addClientType = () => {
-    setCurrentType({ name: '', description: '', color: 'bg-blue-600' });
+    setCurrentType({ name: '', description: '', color: '#3B82F6' });
     setEditMode(false);
     setShowModal(true);
   };
@@ -95,34 +77,45 @@ const ClientTypes = () => {
   };
 
   // حفظ النوع (إضافة أو تعديل)
-  const saveClientType = () => {
+  const saveClientType = async () => {
     if (currentType.name.trim() === '') return;
     
-    if (editMode) {
-      setClientTypes(clientTypes.map(type => 
-        type.id === currentType.id ? {...currentType} : type
-      ));
-    } else {
-      const newType = {
-        ...currentType,
-        id: clientTypes.length + 1,
-        count: 0,
-        created: new Date().toLocaleDateString('ar-EG', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        }).replace(/\//g, '-')
-      };
-      setClientTypes([...clientTypes, newType]);
+    try {
+      setLoading(true);
+      if (editMode) {
+        await clientTypeService.updateClientType(currentType.id, currentType);
+      } else {
+        await clientTypeService.createClientType(currentType);
+      }
+      
+      // إعادة تحميل البيانات
+      await loadClientTypes();
+      setShowModal(false);
+    } catch (err) {
+      console.error('خطأ في حفظ نوع العميل:', err);
+      setError('فشل في حفظ نوع العميل. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setLoading(false);
     }
-    
-    setShowModal(false);
   };
 
   // حذف نوع عميل
-  const deleteClientType = (id) => {
+  const deleteClientType = async (id) => {
     if (window.confirm('هل أنت متأكد من حذف هذا النوع؟')) {
-      setClientTypes(clientTypes.filter(type => type.id !== id));
+      try {
+        setLoading(true);
+        await clientTypeService.deleteClientType(id);
+        await loadClientTypes();
+      } catch (err) {
+        console.error('خطأ في حذف نوع العميل:', err);
+        if (err.response && err.response.status === 409) {
+          setError('لا يمكن حذف نوع العميل لأنه مرتبط بعملاء موجودين.');
+        } else {
+          setError('فشل في حذف نوع العميل. يرجى المحاولة مرة أخرى.');
+        }
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -131,9 +124,42 @@ const ClientTypes = () => {
     return name.charAt(0);
   };
 
+  // الحصول على فئة CSS للون
+  const getColorClass = (color) => {
+    const colorMap = {
+      '#3B82F6': 'bg-blue-600',
+      '#9333EA': 'bg-purple-600',
+      '#4B5563': 'bg-gray-600',
+      '#059669': 'bg-green-600',
+      '#D97706': 'bg-yellow-600',
+      '#DC2626': 'bg-red-600'
+    };
+    return colorMap[color] || 'bg-blue-600';  };  // تنسيق التاريخ بالأرقام dd/mm/yyyy
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
   return (
     <div className="p-4 bg-white rounded-lg shadow-sm">
       <h1 className="mb-6 text-2xl font-bold text-gray-800">أنواع العملاء</h1>
+      
+      {/* رسالة الخطأ */}
+      {error && (
+        <div className="p-4 mb-4 text-red-700 bg-red-100 border border-red-300 rounded-md">
+          {error}
+          <button 
+            onClick={() => setError(null)}
+            className="float-left text-red-700 hover:text-red-900"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       
       {/* قسم البحث وإضافة نوع جديد */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -154,7 +180,8 @@ const ClientTypes = () => {
         
         <button 
           onClick={addClientType}
-          className={BUTTON_CLASSES}
+          disabled={loading}
+          className={`${BUTTON_CLASSES} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <svg className="w-5 h-5 ml-1" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -163,13 +190,23 @@ const ClientTypes = () => {
         </button>
       </div>
       
+      {/* مؤشر التحميل */}
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="w-8 h-8 border-4 border-blue-200 rounded-full border-t-blue-600 animate-spin"></div>
+          <span className="mr-2 text-gray-600">جاري التحميل...</span>
+        </div>
+      )}
+      
       {/* عرض أنواع العملاء */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredTypes.map(type => (
+      {!loading && (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">        {filteredTypes.map(type => (
           <div key={type.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center">
-                <div className={`flex items-center justify-center flex-shrink-0 w-10 h-10 ml-3 text-xl font-medium text-white rounded-full ${type.color}`}>
+                <div 
+                  className={`flex items-center justify-center flex-shrink-0 w-10 h-10 ml-3 text-xl font-medium text-white rounded-full ${getColorClass(type.color)}`}
+                >
                   {getInitial(type.name)}
                 </div>
                 <div>
@@ -181,15 +218,15 @@ const ClientTypes = () => {
             
             <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
               <div>
-                <span className="font-medium">{type.count}</span> عميل
+                <span className="font-medium">{type.clientCount || 0}</span> عميل
               </div>
-              <div>أُضيف {type.created}</div>
+              <div>أُضيف {formatDate(type.createdDate)}</div>
             </div>
-            
-            <div className="flex justify-end pt-3 mt-3 space-x-3 space-x-reverse border-t border-gray-100">
+              <div className="flex justify-end pt-3 mt-3 space-x-3 space-x-reverse border-t border-gray-100">
               <button 
                 onClick={() => editClientType(type)}
-                className="text-yellow-600 hover:text-yellow-900" 
+                disabled={loading}
+                className="text-yellow-600 hover:text-yellow-900 disabled:opacity-50" 
                 title="تعديل"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -199,7 +236,8 @@ const ClientTypes = () => {
               
               <button 
                 onClick={() => deleteClientType(type.id)}
-                className="text-red-600 hover:text-red-900" 
+                disabled={loading}
+                className="text-red-600 hover:text-red-900 disabled:opacity-50" 
                 title="حذف"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -209,13 +247,13 @@ const ClientTypes = () => {
             </div>
           </div>
         ))}
-        
-        {filteredTypes.length === 0 && (
-          <div className="col-span-full p-8 text-center text-gray-500">
-            لم يتم العثور على أنواع عملاء مطابقة للبحث
+          {filteredTypes.length === 0 && !loading && (
+          <div className="p-8 text-center text-gray-500 col-span-full">
+            {clientTypes.length === 0 ? 'لا توجد أنواع عملاء. ابدأ بإضافة نوع جديد.' : 'لم يتم العثور على أنواع عملاء مطابقة للبحث'}
           </div>
         )}
       </div>
+      )}
       
       {/* النموذج المنبثق لإضافة/تعديل نوع */}
       {showModal && (
@@ -246,33 +284,33 @@ const ClientTypes = () => {
                 rows="3"
               />
             </div>
-            
-            <div className="mb-4">
+              <div className="mb-4">
               <label className="block mb-2 text-sm font-medium text-gray-700">اللون</label>
               <div className="flex flex-wrap gap-2">
                 {colorOptions.map(color => (
                   <div 
-                    key={color.class}
-                    onClick={() => setCurrentType({...currentType, color: color.class})}
-                    className={`w-8 h-8 rounded-full cursor-pointer ${color.class} ${currentType.color === color.class ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
+                    key={color.value}
+                    onClick={() => setCurrentType({...currentType, color: color.value})}
+                    className={`w-8 h-8 rounded-full cursor-pointer ${color.class} ${currentType.color === color.value ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
                     title={color.name}
                   />
                 ))}
               </div>
             </div>
-            
-            <div className="flex justify-between pt-4 mt-6 border-t border-gray-200">
+              <div className="flex justify-between pt-4 mt-6 border-t border-gray-200">
               <button 
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-gray-700 transition-colors bg-gray-200 rounded-md hover:bg-gray-300"
+                disabled={loading}
+                className="px-4 py-2 text-gray-700 transition-colors bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50"
               >
                 إلغاء
               </button>
               <button 
                 onClick={saveClientType}
-                className="px-4 py-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+                disabled={loading || currentType.name.trim() === ''}
+                className="px-4 py-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {editMode ? 'حفظ التعديلات' : 'إضافة النوع'}
+                {loading ? 'جاري الحفظ...' : (editMode ? 'حفظ التعديلات' : 'إضافة النوع')}
               </button>
             </div>
           </div>
