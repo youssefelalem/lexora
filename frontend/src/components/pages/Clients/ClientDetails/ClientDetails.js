@@ -59,7 +59,7 @@ const ClientDetails = () => {
   const handleCreateNewWork = async () => {
     try {
       // يمكن فتح مودال لإدخال بيانات العمل أو التوجه لصفحة جديدة
-      navigate(`/dossiers/new?clientId=${id}`);
+      navigate(`/clients/new`);
     } catch (err) {
       console.error('خطأ في إنشاء عمل جديد:', err);
     }

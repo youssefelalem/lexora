@@ -146,7 +146,7 @@ const NewClient = () => {
   
   // العودة إلى الصفحة السابقة
   const handleCancel = () => {
-    navigate('/clients/all');
+    navigate(-1);
   };
   
   return (
