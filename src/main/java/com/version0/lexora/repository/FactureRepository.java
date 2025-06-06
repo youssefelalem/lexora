@@ -16,51 +16,55 @@ import java.util.Optional; // استيراد كلاس Optional لمعالجة ا
 // @Repository: يشير إلى أن هذه الواجهة هي مستودع Spring مسؤول عن عمليات قاعدة البيانات
 @Repository
 // تعريف واجهة FactureRepository التي ترث من JpaRepository
-// JpaRepository<Facture, Long>: يحدد أن هذا المستودع يدير كيانات Facture والمفتاح الأساسي هو من نوع Long
+// JpaRepository<Facture, Long>: يحدد أن هذا المستودع يدير كيانات Facture
+// والمفتاح الأساسي هو من نوع Long
 public interface FactureRepository extends JpaRepository<Facture, Long> {
-    
+
     // طريقة للبحث عن الفاتورة باستخدام رقم الفاتورة
     Optional<Facture> findByNumero(String numero);
-    
+
     // طريقة للبحث عن الفواتير باستخدام العميل
     List<Facture> findByClient(Client client);
-    
+
+    // طريقة للبحث عن الفواتير باستخدام معرف العميل
+    List<Facture> findByClientIdClient(Long clientId);
+
     // طريقة للبحث عن الفواتير باستخدام الملف
     List<Facture> findByDossier(Dossier dossier);
-    
+
     // طريقة للبحث عن الفواتير باستخدام المستخدم الذي أنشأ الفاتورة
     List<Facture> findByUtilisateurCreation(Utilisateur utilisateur);
-    
+
     // طريقة للبحث عن الفواتير باستخدام حالة الفاتورة
     List<Facture> findByStatut(String statut);
-    
+
     // طريقة للبحث عن الفواتير التي تم إصدارها بعد تاريخ معين
     List<Facture> findByDateEmissionAfter(LocalDate date);
-    
+
     // طريقة للبحث عن الفواتير التي تاريخ استحقاقها بعد تاريخ معين
     List<Facture> findByDateEcheanceAfter(LocalDate date);
-    
+
     // طريقة للبحث عن الفواتير التي تاريخ استحقاقها قبل تاريخ معين
     List<Facture> findByDateEcheanceBefore(LocalDate date);
-    
+
     // طريقة للبحث عن الفواتير باستخدام نطاق تاريخ الإصدار
     List<Facture> findByDateEmissionBetween(LocalDate startDate, LocalDate endDate);
-    
+
     // طريقة للبحث عن الفواتير باستخدام نطاق تاريخ الاستحقاق
     List<Facture> findByDateEcheanceBetween(LocalDate startDate, LocalDate endDate);
-    
+
     // طريقة للبحث عن الفواتير التي لها مبلغ إجمالي أكبر من قيمة معينة
     List<Facture> findByMontantTotalGreaterThan(BigDecimal montant);
-    
+
     // طريقة للبحث عن الفواتير التي لها مبلغ متبقي أكبر من قيمة معينة
     List<Facture> findByMontantRestantGreaterThan(BigDecimal montant);
-    
+
     // طريقة للبحث عن الفواتير باستخدام العميل والحالة
     List<Facture> findByClientAndStatut(Client client, String statut);
-    
+
     // طريقة للبحث عن الفواتير باستخدام الملف والحالة
     List<Facture> findByDossierAndStatut(Dossier dossier, String statut);
-    
+
     // طريقة للبحث عن الفواتير باستخدام العملة
     List<Facture> findByDevise(String devise);
 }

@@ -16,54 +16,57 @@ import java.util.List; // استيراد كلاس List لمعالجة القوا
 // @Repository: يشير إلى أن هذه الواجهة هي مستودع Spring مسؤول عن عمليات قاعدة البيانات
 @Repository
 // تعريف واجهة PaiementRepository التي ترث من JpaRepository
-// JpaRepository<Paiement, Long>: يحدد أن هذا المستودع يدير كيانات Paiement والمفتاح الأساسي هو من نوع Long
+// JpaRepository<Paiement, Long>: يحدد أن هذا المستودع يدير كيانات Paiement
+// والمفتاح الأساسي هو من نوع Long
 public interface PaiementRepository extends JpaRepository<Paiement, Long> {
-    
     // طريقة للبحث عن المدفوعات باستخدام العميل
     List<Paiement> findByClient(Client client);
-    
+
+    // طريقة للبحث عن المدفوعات باستخدام معرف العميل
+    List<Paiement> findByClientIdClient(Long clientId);
+
     // طريقة للبحث عن المدفوعات باستخدام الملف
     List<Paiement> findByDossier(Dossier dossier);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام الفاتورة
     List<Paiement> findByFacture(Facture facture);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام طريقة الدفع
     List<Paiement> findByMethode(String methode);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام العملة
     List<Paiement> findByDevise(String devise);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام الحالة
     List<Paiement> findByStatut(String statut);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام تاريخ الدفع
     List<Paiement> findByDatePaiement(LocalDate date);
-    
+
     // طريقة للبحث عن المدفوعات التي تم دفعها بعد تاريخ معين
     List<Paiement> findByDatePaiementAfter(LocalDate date);
-    
+
     // طريقة للبحث عن المدفوعات التي تم دفعها قبل تاريخ معين
     List<Paiement> findByDatePaiementBefore(LocalDate date);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام نطاق تاريخ الدفع
     List<Paiement> findByDatePaiementBetween(LocalDate startDate, LocalDate endDate);
-    
+
     // طريقة للبحث عن المدفوعات التي تم إنشاؤها بواسطة مستخدم معين
     List<Paiement> findByUtilisateurCreation(Utilisateur utilisateur);
-    
+
     // طريقة للبحث عن المدفوعات التي مبلغها أكبر من قيمة معينة
     List<Paiement> findByMontantGreaterThan(BigDecimal montant);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام رقم المرجع (رقم الشيك أو التحويل)
     List<Paiement> findByNumeroReference(String numeroReference);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام مرجع البنك
     List<Paiement> findByBanqueReference(String banqueReference);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام العميل والحالة
     List<Paiement> findByClientAndStatut(Client client, String statut);
-    
+
     // طريقة للبحث عن المدفوعات باستخدام الملف والحالة
     List<Paiement> findByDossierAndStatut(Dossier dossier, String statut);
 }

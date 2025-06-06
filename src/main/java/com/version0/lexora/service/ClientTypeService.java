@@ -78,4 +78,16 @@ public interface ClientTypeService {
      * Check if client type exists by name
      */
     boolean existsByName(String name);
+
+    /**
+     * تحديث عدد العملاء التلقائي لنوع معين
+     * Auto-update client count for a specific client type
+     */
+    void updateClientCountForType(String clientTypeName);
+
+    /**
+     * تحديث عدد العملاء لجميع أنواع العملاء
+     * Update client count for all client types
+     */
+    void updateAllClientCounts();
 }

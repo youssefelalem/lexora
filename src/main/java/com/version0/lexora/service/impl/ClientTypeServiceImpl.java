@@ -3,6 +3,7 @@ package com.version0.lexora.service.impl;
 import com.version0.lexora.dto.ClientTypeDTO;
 import com.version0.lexora.model.ClientType;
 import com.version0.lexora.repository.ClientTypeRepository;
+import com.version0.lexora.repository.ClientRepository;
 import com.version0.lexora.service.ClientTypeService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +24,11 @@ import java.util.stream.Collectors;
 public class ClientTypeServiceImpl implements ClientTypeService {
 
     private final ClientTypeRepository clientTypeRepository;
+    private final ClientRepository clientRepository;
 
-    public ClientTypeServiceImpl(ClientTypeRepository clientTypeRepository) {
+    public ClientTypeServiceImpl(ClientTypeRepository clientTypeRepository, ClientRepository clientRepository) {
         this.clientTypeRepository = clientTypeRepository;
+        this.clientRepository = clientRepository;
     }
 
     @Override
@@ -149,7 +152,9 @@ public class ClientTypeServiceImpl implements ClientTypeService {
         dto.setName(clientType.getName());
         dto.setDescription(clientType.getDescription());
         dto.setColor(clientType.getColor());
-        dto.setClientCount(clientType.getClientCount() != null ? clientType.getClientCount() : 0);
+        // حساب عدد العملاء الفعلي من قاعدة البيانات
+        int actualClientCount = clientRepository.findByType(clientType.getName()).size();
+        dto.setClientCount(actualClientCount);
         dto.setImageUrl(clientType.getImageUrl());
         dto.setCreatedDate(clientType.getCreatedDate());
         return dto;
@@ -169,5 +174,35 @@ public class ClientTypeServiceImpl implements ClientTypeService {
         clientType.setImageUrl(dto.getImageUrl());
         clientType.setCreatedDate(dto.getCreatedDate());
         return clientType;
+    }
+
+    /**
+     * تحديث عدد العملاء التلقائي لنوع معين
+     * Auto-update client count for a specific client type
+     */
+    @Transactional
+    public void updateClientCountForType(String clientTypeName) {
+        Optional<ClientType> clientTypeOptional = clientTypeRepository.findByNameIgnoreCase(clientTypeName);
+        if (clientTypeOptional.isPresent()) {
+            ClientType clientType = clientTypeOptional.get();
+            // حساب العدد الفعلي للعملاء من قاعدة البيانات
+            int actualCount = clientRepository.findByType(clientTypeName).size();
+            clientType.setClientCount(actualCount);
+            clientTypeRepository.save(clientType);
+        }
+    }
+
+    /**
+     * تحديث عدد العملاء لجميع أنواع العملاء
+     * Update client count for all client types
+     */
+    @Transactional
+    public void updateAllClientCounts() {
+        List<ClientType> allClientTypes = clientTypeRepository.findAll();
+        for (ClientType clientType : allClientTypes) {
+            int actualCount = clientRepository.findByType(clientType.getName()).size();
+            clientType.setClientCount(actualCount);
+            clientTypeRepository.save(clientType);
+        }
     }
 }

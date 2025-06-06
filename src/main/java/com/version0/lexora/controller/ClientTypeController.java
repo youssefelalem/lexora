@@ -194,6 +194,20 @@ public class ClientTypeController {
     }
 
     /**
+     * تحديث جميع أعداد العملاء لجميع أنواع العملاء
+     * Update all client counts for all client types
+     */
+    @PutMapping("/update-all-counts")
+    public ResponseEntity<Void> updateAllClientCounts() {
+        try {
+            clientTypeService.updateAllClientCounts();
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
      * التحقق من وجود نوع عميل بالاسم
      * Check if client type exists by name
      */
@@ -202,6 +216,20 @@ public class ClientTypeController {
         try {
             boolean exists = clientTypeService.existsByName(name);
             return ResponseEntity.ok(exists);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * تحديث عدد العملاء لنوع معين تلقائياً
+     * Auto-update client count for a specific type
+     */
+    @PostMapping("/update-count/{typeName}")
+    public ResponseEntity<Void> updateClientCountForType(@PathVariable String typeName) {
+        try {
+            clientTypeService.updateClientCountForType(typeName);
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

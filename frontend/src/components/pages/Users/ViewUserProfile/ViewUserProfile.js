@@ -85,9 +85,8 @@ const ViewUserProfile = () => {
       
       // التحقق من صحة التاريخ
       if (isNaN(date.getTime())) return 'غير محدد';
-      
-      // تنسيق التاريخ بالعربية
-      const formattedDate = date.toLocaleDateString('ar-MA', {
+        // تنسيق التاريخ بالفرنسية
+      const formattedDate = date.toLocaleDateString('fr-FR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'

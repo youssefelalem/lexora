@@ -10,14 +10,13 @@ const EditClient = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   
-  // === حالة البيانات ===
-  // البيانات الأساسية للعميل
+  // === حالة البيانات ===  // البيانات الأساسية للعميل
   const [clientData, setClientData] = useState({
     nom: '',           // الاسم
     email: '',         // البريد الإلكتروني
-    phone: '',         // رقم الهاتف
+    telephone: '',     // رقم الهاتف
     type: 'شركة',      // نوع العميل
-    address: '',       // العنوان
+    adresse: '',       // العنوان
     contact: '',       // جهة الاتصال
     notes: '',         // ملاحظات
     statut: 'نشط'      // الحالة
@@ -55,8 +54,7 @@ const EditClient = () => {
       }));
     }
   };
-  
-  /**
+    /**
    * التحقق من صحة بيانات النموذج
    * @returns {boolean} - صحة البيانات
    */
@@ -64,22 +62,23 @@ const EditClient = () => {
     const newErrors = {};
     
     // التحقق من الاسم
-    if (!clientData.nom.trim()) {
+    if (!clientData.nom || !clientData.nom.trim()) {
       newErrors.nom = 'اسم العميل مطلوب';
     }
-    
-    // التحقق من البريد الإلكتروني
-    if (!clientData.email.trim()) {
-      newErrors.email = 'البريد الإلكتروني مطلوب';
-    } else if (!/\S+@\S+\.\S+/.test(clientData.email)) {
-      newErrors.email = 'يرجى إدخال بريد إلكتروني صحيح';
+      // التحقق من رقم الهاتف (مطلوب)
+    if (!clientData.telephone || !clientData.telephone.trim()) {
+      newErrors.telephone = 'رقم الهاتف مطلوب';
+    } else {
+      const phoneRegex = /^[+]?[\d\s()-]{8,}$/;
+      if (!phoneRegex.test(clientData.telephone)) {
+        newErrors.telephone = 'الرجاء إدخال رقم هاتف صحيح';
+      }
     }
     
-    // التحقق من رقم الهاتف (إذا تم إدخاله)
-    if (clientData.phone.trim()) {
-      const phoneRegex = /^[+]?[\d\s()-]{8,}$/;
-      if (!phoneRegex.test(clientData.phone)) {
-        newErrors.phone = 'الرجاء إدخال رقم هاتف صحيح';
+    // التحقق من البريد الإلكتروني (اختياري - فقط إذا تم إدخاله)
+    if (clientData.email && clientData.email.trim()) {
+      if (!/\S+@\S+\.\S+/.test(clientData.email)) {
+        newErrors.email = 'يرجى إدخال بريد إلكتروني صحيح';
       }
     }
     
@@ -149,16 +148,26 @@ const EditClient = () => {
    * الرجوع إلى الصفحة السابقة
    */
   const handleCancel = () => {
-    navigate(`/clients/${id}`);
+    navigate(-1);
   };
-  
-  // === تأثيرات جانبية ===
+    // === تأثيرات جانبية ===
   // جلب بيانات العميل عند تحميل المكون
   useEffect(() => {
     const fetchClient = async () => {
       try {
         const response = await clientService.getClientById(id);
-        setClientData(response.data);
+        // تأكيد أن جميع الحقول محددة لتجنب خطأ undefined.trim()
+        const clientData = response.data;
+        setClientData({
+          nom: clientData.nom || '',
+          email: clientData.email || '',
+          telephone: clientData.telephone || '',
+          type: clientData.type || 'شركة',
+          adresse: clientData.adresse || '',
+          contact: clientData.contact || '',
+          notes: clientData.notes || '',
+          statut: clientData.statut || 'نشط'
+        });
       } catch (err) {
         console.error('خطأ في جلب بيانات العميل:', err);
         setGeneralError('حدث خطأ أثناء جلب بيانات العميل');
@@ -236,11 +245,10 @@ const EditClient = () => {
               ))}
             </select>
           </div>
-          
-          {/* البريد الإلكتروني */}
+            {/* البريد الإلكتروني */}
           <div>
             <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700">
-              البريد الإلكتروني <span className="text-red-500">*</span>
+              البريد الإلكتروني
             </label>
             <input
               type="email"
@@ -255,25 +263,23 @@ const EditClient = () => {
             {errors.email && (
               <p className="mt-1 text-xs text-red-500">{errors.email}</p>
             )}
-          </div>
-          
-          {/* رقم الهاتف */}
+          </div>            {/* رقم الهاتف */}
           <div>
-            <label htmlFor="phone" className="block mb-2 text-sm font-medium text-gray-700">
-              رقم الهاتف
+            <label htmlFor="telephone" className="block mb-2 text-sm font-medium text-gray-700">
+              رقم الهاتف <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              id="phone"
-              name="phone"
-              value={clientData.phone}
+              id="telephone"
+              name="telephone"
+              value={clientData.telephone}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className={`w-full px-3 py-2 border ${errors.telephone ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               placeholder="+212123456789"
               dir="ltr"
             />
-            {errors.phone && (
-              <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+            {errors.telephone && (
+              <p className="mt-1 text-xs text-red-500">{errors.telephone}</p>
             )}
           </div>
           
@@ -310,17 +316,16 @@ const EditClient = () => {
               ))}
             </select>
           </div>
-          
-          {/* العنوان (يمتد على عرض الشاشة كاملة) */}
+            {/* العنوان (يمتد على عرض الشاشة كاملة) */}
           <div className="md:col-span-2">
-            <label htmlFor="address" className="block mb-2 text-sm font-medium text-gray-700">
+            <label htmlFor="adresse" className="block mb-2 text-sm font-medium text-gray-700">
               العنوان
             </label>
             <input
               type="text"
-              id="address"
-              name="address"
-              value={clientData.address}
+              id="adresse"
+              name="adresse"
+              value={clientData.adresse}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="أدخل عنوان العميل"

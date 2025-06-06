@@ -157,12 +157,11 @@ const clientTypeService = {
   
   // الحصول على إجمالي عدد أنواع العملاء
   getTotalClientTypesCount: () => api.get('/client-types/count'),
-  
-  // تحديث عدد العملاء لنوع معين
+    // تحديث عدد العملاء لنوع معين
   updateClientCount: (id, clientCount) => api.patch(`/client-types/${id}/client-count?clientCount=${clientCount}`),
   
   // التحقق من وجود نوع عميل بالاسم
-  existsByName: (name) => api.get(`/client-types/exists/${encodeURIComponent(name)}`)
+  existsByName: (name) => api.get(`/client-types/exists/${name}`)
 };
 
 // خدمات المصادقة
@@ -418,9 +417,53 @@ const sessionService = {
   
   // الحصول على الجلسات في فترة زمنية محددة
   getSessionsByDateRange: (startDate, endDate) => api.get(`/sessions/period?startDate=${startDate}&endDate=${endDate}`),
-  
-  // الحصول على الجلسات القادمة
+    // الحصول على الجلسات القادمة
   getUpcomingSessions: () => api.get('/sessions/upcoming')
+};
+
+// خدمات إحصائيات العملاء
+const clientStatisticsService = {
+  // الحصول على إحصائيات عميل محدد
+  getClientStatistics: (clientId) => api.get(`/clients/${clientId}/statistics`),
+  
+  // الحصول على إجمالي الضمائم المقدمة لعميل
+  getClientTotalReceived: (clientId) => api.get(`/clients/${clientId}/total-received`),
+  
+  // الحصول على إجمالي الضمائم المدفوعة لعميل
+  getClientTotalPaid: (clientId) => api.get(`/clients/${clientId}/total-paid`),
+  
+  // الحصول على رصيد العميل
+  getClientBalance: (clientId) => api.get(`/clients/${clientId}/balance`),
+  
+  // الحصول على ملخص مالي للعميل
+  getClientFinancialSummary: (clientId) => api.get(`/clients/${clientId}/financial-summary`)
+};
+
+// خدمات قضايا العملاء
+const clientCasesService = {
+  // الحصول على جميع قضايا عميل محدد
+  getClientCases: (clientId) => api.get(`/clients/${clientId}/cases`),
+  
+  // الحصول على قضية محددة لعميل
+  getClientCase: (clientId, caseId) => api.get(`/clients/${clientId}/cases/${caseId}`),
+  
+  // إنشاء قضية جديدة لعميل
+  createClientCase: (clientId, caseData) => api.post(`/clients/${clientId}/cases`, caseData),
+  
+  // تحديث قضية لعميل
+  updateClientCase: (clientId, caseId, caseData) => api.put(`/clients/${clientId}/cases/${caseId}`, caseData),
+  
+  // حذف قضية لعميل
+  deleteClientCase: (clientId, caseId) => api.delete(`/clients/${clientId}/cases/${caseId}`),
+  
+  // الحصول على قضايا العميل حسب الحالة
+  getClientCasesByStatus: (clientId, status) => api.get(`/clients/${clientId}/cases/status/${status}`),
+  
+  // إضافة عمل جديد لعميل (ملف/دوسييه)
+  createClientWork: (clientId, workData) => api.post(`/clients/${clientId}/dossiers`, workData),
+  
+  // الحصول على أعمال العميل (الملفات/الدوسييهات)
+  getClientWorks: (clientId) => api.get(`/clients/${clientId}/dossiers`)
 };
 
 // وظيفة مساعدة لتنسيق التاريخ لاستخدامها في طلبات API
@@ -446,5 +489,7 @@ export {
   factureService,
   paiementService,
   sessionService,
+  clientStatisticsService,
+  clientCasesService,
   formatDate
 };

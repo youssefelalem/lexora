@@ -4,14 +4,13 @@ import { clientService } from '../../../../services/api';
 
 const NewClient = () => {
   const navigate = useNavigate();
-  
-  // حالة بيانات العميل الجديد
+    // حالة بيانات العميل الجديد
   const [clientData, setClientData] = useState({
     nom: '',           // تغيير من name إلى nom
     email: '',
-    phone: '',
+    telephone: '',     // تغيير من phone إلى telephone لمطابقة DTO
     type: 'شركة',
-    address: '',
+    adresse: '',       // تغيير من address إلى adresse لمطابقة DTO
     contact: '',
     notes: '',
     statut: 'نشط'      // تغيير من status إلى statut
@@ -43,8 +42,7 @@ const NewClient = () => {
       }));
     }
   };
-  
-  // التحقق من صحة البيانات
+    // التحقق من صحة البيانات
   const validateForm = () => {
     const newErrors = {};
     
@@ -54,22 +52,21 @@ const NewClient = () => {
     } else if (clientData.nom.trim().length < 3) {
       newErrors.nom = 'يجب أن يتكون الاسم من 3 أحرف على الأقل';
     }
-    
-    // التحقق من البريد الإلكتروني
-    if (!clientData.email.trim()) {
-      newErrors.email = 'البريد الإلكتروني مطلوب';
+      // التحقق من رقم الهاتف (مطلوب)
+    if (!clientData.telephone.trim()) {
+      newErrors.telephone = 'رقم الهاتف مطلوب';
     } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(clientData.email)) {
-        newErrors.email = 'الرجاء إدخال بريد إلكتروني صحيح';
+      const phoneRegex = /^[+]?[\d\s()-]{8,}$/;
+      if (!phoneRegex.test(clientData.telephone)) {
+        newErrors.telephone = 'الرجاء إدخال رقم هاتف صحيح';
       }
     }
     
-    // التحقق من رقم الهاتف (إذا تم إدخاله)
-    if (clientData.phone.trim()) {
-      const phoneRegex = /^[+]?[\d\s()-]{8,}$/;
-      if (!phoneRegex.test(clientData.phone)) {
-        newErrors.phone = 'الرجاء إدخال رقم هاتف صحيح';
+    // التحقق من البريد الإلكتروني (إذا تم إدخاله)
+    if (clientData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(clientData.email)) {
+        newErrors.email = 'الرجاء إدخال بريد إلكتروني صحيح';
       }
     }
     
@@ -207,11 +204,10 @@ const NewClient = () => {
               ))}
             </select>
           </div>
-          
-          {/* البريد الإلكتروني */}
+            {/* البريد الإلكتروني */}
           <div>
             <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700">
-              البريد الإلكتروني <span className="text-red-500">*</span>
+              البريد الإلكتروني
             </label>
             <input
               type="email"
@@ -227,24 +223,23 @@ const NewClient = () => {
               <p className="mt-1 text-xs text-red-500">{errors.email}</p>
             )}
           </div>
-          
-          {/* رقم الهاتف */}
+            {/* رقم الهاتف */}
           <div>
-            <label htmlFor="phone" className="block mb-2 text-sm font-medium text-gray-700">
-              رقم الهاتف
+            <label htmlFor="telephone" className="block mb-2 text-sm font-medium text-gray-700">
+              رقم الهاتف <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              id="phone"
-              name="phone"
-              value={clientData.phone}
+              id="telephone"
+              name="telephone"
+              value={clientData.telephone}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className={`w-full px-3 py-2 border ${errors.telephone ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               placeholder="+212123456789"
               dir="ltr"
             />
-            {errors.phone && (
-              <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+            {errors.telephone && (
+              <p className="mt-1 text-xs text-red-500">{errors.telephone}</p>
             )}
           </div>
           
@@ -281,17 +276,16 @@ const NewClient = () => {
               ))}
             </select>
           </div>
-          
-          {/* العنوان (يمتد على عرض الشاشة كاملة) */}
+            {/* العنوان (يمتد على عرض الشاشة كاملة) */}
           <div className="md:col-span-2">
-            <label htmlFor="address" className="block mb-2 text-sm font-medium text-gray-700">
+            <label htmlFor="adresse" className="block mb-2 text-sm font-medium text-gray-700">
               العنوان
             </label>
             <input
               type="text"
-              id="address"
-              name="address"
-              value={clientData.address}
+              id="adresse"
+              name="adresse"
+              value={clientData.adresse}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="أدخل عنوان العميل"

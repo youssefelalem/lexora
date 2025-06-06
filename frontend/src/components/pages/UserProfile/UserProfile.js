@@ -146,8 +146,7 @@ const UserProfile = () => {
         console.warn('تاريخ غير صالح:', dateValue);
         return 'تاريخ غير صالح';
       }
-      
-      // استخدم تنسيق عربي للعرض
+        // استخدم تنسيق فرنسي للعرض
       const options = {
         year: 'numeric',
         month: 'long',
@@ -160,7 +159,7 @@ const UserProfile = () => {
         options.minute = '2-digit';
       }
       
-      return date.toLocaleDateString('ar-MA', options);
+      return date.toLocaleDateString('fr-FR', options);
     } catch (error) {
       console.error('خطأ في عرض التاريخ:', error, dateValue);
       return 'تاريخ غير صالح';
