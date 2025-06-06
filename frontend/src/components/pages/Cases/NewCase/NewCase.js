@@ -1,40 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { caseService, clientService } from '../../../../services/api';
 
 // تعريف ثوابت للفئات المشتركة لتقليل التكرار
 const BUTTON_CLASSES = "flex items-center px-4 py-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700";
 const INPUT_CLASSES = "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500";
+const INPUT_REQUIRED_CLASSES = "w-full px-3 py-2 border-2 border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500";
+const INPUT_VALID_CLASSES = "w-full px-3 py-2 border-2 border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500";
 const LABEL_CLASSES = "block mb-1 text-sm font-medium text-gray-700";
+const LABEL_REQUIRED_CLASSES = "block mb-1 text-sm font-medium text-red-600";
 const SECTION_CLASSES = "p-4 mb-6 border border-gray-200 rounded-lg";
 const SECTION_TITLE_CLASSES = "mb-4 text-lg font-semibold text-gray-800";
 
 const NewCase = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-
-  // بيانات القضية الجديدة
+  const [loading, setLoading] = useState(false);  // بيانات القضية الجديدة
   const [caseData, setCaseData] = useState({
-    title: '',
+    titre: '',  // title -> titre للـ backend
     description: '',
     clientId: '',
     type: '',
-    court: '',
-    lawyer: '',
-    fileNumber: '',
-    judgeId: '',
-    opposingParty: '',
-    opposingLawyer: '',
-    status: 'جارية',
-    priority: 'متوسطة',
-    initialDate: '',
-    sessionDate: '',
-    sessionNotes: '',
-    attachments: []
+    tribunal: '',  // court -> tribunal للـ backend
+    avocat: '',   // lawyer -> avocat للـ backend
+    fichierNumero: '',  // fileNumber -> fichierNumero للـ backend
+    jugeId: '',   // judgeId -> jugeId للـ backend
+    partieAdverse: '',  // opposingParty -> partieAdverse للـ backend
+    avocatAdverse: '',  // opposingLawyer -> avocatAdverse للـ backend
+    statut: 'جارية',     // status -> statut للـ backend
+    priorite: 'متوسطة', // priority -> priorite للـ backend
+    dateInitiale: ''   // initialDate -> dateInitiale للـ backend
   });
 
+  // حالة الأخطاء للحقول المطلوبة
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [showValidation, setShowValidation] = useState(false);
   // قوائم البيانات
   const [clients, setClients] = useState([]);
-  const [lawyers, setLawyers] = useState([]);
   const [judges, setJudges] = useState([]);
   const [courts, setCourts] = useState([]);
 
@@ -42,7 +43,6 @@ const NewCase = () => {
   const caseTypes = ['عقاري', 'مدني', 'تجاري', 'أحوال شخصية', 'ملكية فكرية', 'إداري', 'عمالي'];
   const statusTypes = ['جارية', 'معلقة', 'مؤجلة', 'مغلقة'];
   const priorityTypes = ['عالية', 'متوسطة', 'منخفضة'];
-
   // تغيير قيم الحقول
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,106 +50,220 @@ const NewCase = () => {
       ...prevData,
       [name]: value
     }));
+
+    // إزالة الخطأ من الحقل عند التعديل
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: false
+      }));
+    }
+
+    // التحقق الفوري للحقول المطلوبة
+    if (showValidation) {
+      validateField(name, value);
+    }
   };
 
-  // تحميل بيانات القوائم المنسدلة
+  // التحقق من حقل واحد
+  const validateField = (fieldName, value) => {
+    const requiredFields = ['titre', 'clientId', 'type', 'tribunal', 'avocat', 'statut', 'priorite'];
+    
+    if (requiredFields.includes(fieldName)) {
+      const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
+      setFieldErrors(prev => ({
+        ...prev,
+        [fieldName]: isEmpty
+      }));
+      return !isEmpty;
+    }
+    return true;
+  };
+
+  // دالة للحصول على فئة CSS للحقل
+  const getInputClass = (fieldName) => {
+    if (!showValidation) return INPUT_CLASSES;
+    
+    const requiredFields = ['titre', 'clientId', 'type', 'tribunal', 'avocat', 'statut', 'priorite'];
+    if (!requiredFields.includes(fieldName)) return INPUT_CLASSES;
+    
+    const value = caseData[fieldName];
+    const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
+    
+    if (isEmpty) return INPUT_REQUIRED_CLASSES;
+    return INPUT_VALID_CLASSES;
+  };
+
+  // دالة للحصول على فئة CSS للتسمية
+  const getLabelClass = (fieldName) => {
+    const requiredFields = ['titre', 'clientId', 'type', 'tribunal', 'avocat', 'statut', 'priorite'];
+    if (requiredFields.includes(fieldName) && showValidation && fieldErrors[fieldName]) {
+      return LABEL_REQUIRED_CLASSES;
+    }
+    return LABEL_CLASSES;
+  };// تحميل بيانات القوائم المنسدلة
   useEffect(() => {
-    // في الإستخدام الفعلي، سيتم استبدال هذه البيانات بطلبات API
-    setClients([
-      { id: 1, name: 'شركة الفجر للتكنولوجيا' },
-      { id: 2, name: 'محمد علي' },
-      { id: 3, name: 'مؤسسة النور للاستشارات' },
-      { id: 4, name: 'خالد عبد الرحمن' },
-      { id: 5, name: 'شركة السلام للتجارة' },
-    ]);
+    const loadData = async () => {
+      try {
+        // تحميل العملاء من الـ API
+        const clientsResponse = await clientService.getAllClients();
+        setClients(clientsResponse.data);
 
-    setLawyers([
-      { id: 1, name: 'أحمد محمود' },
-      { id: 2, name: 'سارة أحمد' },
-      { id: 3, name: 'خالد محمد' },
-      { id: 4, name: 'لمياء علي' },
-      { id: 5, name: 'عمر حسن' },
-    ]);
+        // بيانات القضاة والمحاكم (ثابتة مؤقتاً)
+        setJudges([
+          { id: 1, name: 'القاضي محمد العلوي' },
+          { id: 2, name: 'القاضي حسن المغربي' },
+          { id: 3, name: 'القاضي سمير التازي' },
+        ]);
 
-    setJudges([
-      { id: 1, name: 'القاضي محمد العلوي' },
-      { id: 2, name: 'القاضي حسن المغربي' },
-      { id: 3, name: 'القاضي سمير التازي' },
-    ]);
+        setCourts([
+          { id: 1, name: 'المحكمة الإبتدائية - الرباط' },
+          { id: 2, name: 'محكمة الاستئناف - الدار البيضاء' },
+          { id: 3, name: 'المحكمة التجارية - مراكش' },
+          { id: 4, name: 'محكمة الأسرة - فاس' },
+          { id: 5, name: 'المحكمة الإدارية - الرباط' },
+          { id: 6, name: 'محكمة العمل - الدار البيضاء' },
+        ]);
+      } catch (error) {
+        console.error('خطأ في تحميل البيانات:', error);
+        alert('فشل في تحميل البيانات، يرجى إعادة تحميل الصفحة');
+      }
+    };
 
-    setCourts([
-      { id: 1, name: 'المحكمة الإبتدائية - الرباط' },
-      { id: 2, name: 'محكمة الاستئناف - الدار البيضاء' },
-      { id: 3, name: 'المحكمة التجارية - مراكش' },
-      { id: 4, name: 'محكمة الأسرة - فاس' },
-      { id: 5, name: 'المحكمة الإدارية - الرباط' },
-      { id: 6, name: 'محكمة العمل - الدار البيضاء' },
-    ]);
-  }, []);
-
-  // إدارة المرفقات
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    
-    // تحقق من حجم الملفات وقيود الأنواع هنا
-    const validFiles = files.filter(file => file.size <= 5 * 1024 * 1024); // حد 5MB
-    
-    setCaseData(prevData => ({
-      ...prevData,
-      attachments: [...prevData.attachments, ...validFiles]
-    }));
-  };
-
-  // إزالة مرفق
-  const removeAttachment = (index) => {
-    setCaseData(prevData => {
-      const updatedAttachments = [...prevData.attachments];
-      updatedAttachments.splice(index, 1);
-      return { ...prevData, attachments: updatedAttachments };
-    });
-  };
-
-  // التحقق من صلاحية النموذج
+    loadData();
+  }, []);  // التحقق من صلاحية النموذج
   const validateForm = () => {
-    const requiredFields = ['title', 'clientId', 'type', 'court', 'lawyer', 'status', 'priority'];
-    return requiredFields.every(field => caseData[field]);
+    setShowValidation(true);
+    const requiredFields = ['titre', 'clientId', 'type', 'tribunal', 'avocat', 'statut', 'priorite'];
+    const errors = {};
+    let hasError = false;
+    
+    // التحقق من الحقول المطلوبة
+    requiredFields.forEach(field => {
+      const value = caseData[field];
+      const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
+      if (isEmpty) {
+        errors[field] = true;
+        hasError = true;
+      }
+    });
+      // التحقق من صحة معرف العميل
+    if (caseData.clientId) {
+      const clientIdNum = parseInt(caseData.clientId);
+      if (isNaN(clientIdNum) || clientIdNum <= 0) {
+        errors.clientId = true;
+        hasError = true;
+        console.error('معرف العميل غير صحيح:', caseData.clientId);
+      }
+    }
+    
+    // التحقق من صحة التاريخ إذا كان موجوداً
+    if (caseData.dateInitiale && !isValidDate(caseData.dateInitiale)) {
+      errors.dateInitiale = true;
+      hasError = true;
+      console.error('تاريخ بدء القضية غير صحيح');
+    }
+    
+    setFieldErrors(errors);
+    return !hasError;
   };
-
-  // حفظ القضية الجديدة
+  
+  // دالة مساعدة للتحقق من صحة التاريخ
+  const isValidDate = (dateString) => {
+    const date = new Date(dateString);
+    return date instanceof Date && !isNaN(date);
+  };  // حفظ القضية الجديدة
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      alert('يرجى ملء جميع الحقول المطلوبة');
+      // عرض رسالة تفصيلية عن الحقول المطلوبة
+      const missingFields = [];
+      const requiredFields = [
+        { key: 'titre', name: 'عنوان القضية' },
+        { key: 'clientId', name: 'العميل' },
+        { key: 'type', name: 'نوع القضية' },
+        { key: 'tribunal', name: 'المحكمة' },
+        { key: 'avocat', name: 'المحامي المسؤول' },
+        { key: 'statut', name: 'حالة القضية' },
+        { key: 'priorite', name: 'أولوية القضية' }
+      ];
+      
+      requiredFields.forEach(field => {
+        const value = caseData[field.key];
+        if (!value || (typeof value === 'string' && value.trim() === '')) {
+          missingFields.push(field.name);
+        }
+      });
+      
+      if (missingFields.length > 0) {
+        alert(`يرجى ملء الحقول المطلوبة التالية:\n• ${missingFields.join('\n• ')}`);
+      } else {
+        alert('يرجى التأكد من صحة جميع البيانات المدخلة');
+      }
       return;
     }
     
     setLoading(true);
-    
-    try {
-      // هنا سيكون الاتصال بـ API لحفظ القضية
-      console.log('تم إرسال بيانات القضية:', caseData);
+      try {        // تحضير بيانات القضية للإرسال
+      const caseDataToSend = {
+        titre: caseData.titre.trim(),
+        description: caseData.description ? caseData.description.trim() : '',
+        clientId: parseInt(caseData.clientId),
+        type: caseData.type,
+        tribunal: caseData.tribunal,
+        avocat: caseData.avocat.trim(),
+        fichierNumero: caseData.fichierNumero ? caseData.fichierNumero.trim() : null,
+        jugeId: caseData.jugeId && caseData.jugeId !== '' ? caseData.jugeId : null,
+        partieAdverse: caseData.partieAdverse ? caseData.partieAdverse.trim() : null,
+        avocatAdverse: caseData.avocatAdverse ? caseData.avocatAdverse.trim() : null,
+        statut: caseData.statut,
+        priorite: caseData.priorite,
+        // تحويل التواريخ إلى تنسيق ISO إذا كانت موجودة
+        dateInitiale: caseData.dateInitiale ? new Date(caseData.dateInitiale).toISOString().split('T')[0] : null
+      };
+
+      // تسجيل تفصيلي للبيانات
+      console.log('البيانات الأصلية:', caseData);
+      console.log('البيانات المعدة للإرسال:', caseDataToSend);
+      console.log('معرف العميل:', caseDataToSend.clientId, 'نوعه:', typeof caseDataToSend.clientId);
       
-      // إنشاء FormData لإرسال المرفقات
-      const formData = new FormData();
+      // التحقق من أن معرف العميل صحيح
+      if (!caseDataToSend.clientId || isNaN(caseDataToSend.clientId)) {
+        throw new Error('معرف العميل غير صحيح');
+      }console.log('إرسال بيانات القضية:', caseDataToSend);
       
-      // إضافة بيانات القضية كـ JSON
-      formData.append('caseData', JSON.stringify(caseData));
+      // إرسال البيانات إلى الخادم
+      const response = await caseService.createCase(caseDataToSend);
       
-      // إضافة المرفقات
-      caseData.attachments.forEach((file, index) => {
-        formData.append(`attachment-${index}`, file);
-      });
+      console.log('تم إنشاء القضية بنجاح:', response.data);
       
-      // محاكاة الاتصال بالخادم
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // عند نجاح الإضافة
+      // عرض رسالة نجاح
       alert('تمت إضافة القضية بنجاح');
-      navigate('/cases/all');
+      
+      // إعادة توجيه إلى صفحة جميع القضايا
+      navigate('/cases');
+      
     } catch (error) {
-      console.error('حدث خطأ أثناء حفظ القضية:', error);
-      alert('فشل في إضافة القضية، يرجى المحاولة مرة أخرى');
+      console.error('خطأ في إضافة القضية:', error);
+      console.error('تفاصيل الخطأ:', error.response);
+      
+      // عرض رسالة خطأ مناسبة مع تفاصيل أكثر
+      let errorMessage = 'فشل في إضافة القضية، يرجى المحاولة مرة أخرى';
+      
+      if (error.response?.status === 400) {
+        errorMessage = 'خطأ في البيانات المدخلة. يرجى التحقق من صحة جميع البيانات';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'خطأ في الخادم. يرجى المحاولة لاحقاً';
+      } else if (error.response?.data?.message) {
+        errorMessage = `خطأ: ${error.response.data.message}`;
+      } else if (error.message) {
+        errorMessage = `خطأ: ${error.message}`;
+      } else if (!window.navigator.onLine) {
+        errorMessage = 'لا يوجد اتصال بالإنترنت. يرجى التحقق من اتصالك';
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -158,63 +272,125 @@ const NewCase = () => {
   // إلغاء وعودة
   const handleCancel = () => {
     if (window.confirm('هل أنت متأكد من إلغاء إضافة القضية؟ ستفقد جميع البيانات المدخلة.')) {
-      navigate('/cases/all');
+      navigate('/cases');
     }
   };
 
-  return (
-    <div className="p-4 bg-white rounded-lg shadow-sm">
+  // دالة اختبار تحميل العملاء
+  const testClients = () => {
+    console.log('قائمة العملاء المحملة:', clients);
+    console.log('عدد العملاء:', clients.length);
+    if (clients.length > 0) {
+      console.log('أول عميل:', clients[0]);
+      console.log('معرف أول عميل:', clients[0].id || clients[0].idClient);
+    }
+  };
+
+  // دالة اختبار الاتصال بالخادم
+  const testServerConnection = async () => {
+    try {
+      console.log('اختبار الاتصال بالخادم...');
+      const response = await fetch('http://localhost:8080/api/dossiers', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        console.log('الاتصال بالخادم ناجح');
+        return true;
+      } else {
+        console.error('فشل الاتصال بالخادم، الكود:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('خطأ في الاتصال بالخادم:', error);
+      return false;
+    }
+  };
+
+  return (    <div className="p-4 bg-white rounded-lg shadow-sm">
       <h1 className="mb-6 text-2xl font-bold text-gray-800">إضافة قضية جديدة</h1>
+        {/* تنبيه للحقول المطلوبة */}
+      <div className="p-4 mb-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center">
+              <span className="text-blue-600 text-xl ml-2">ℹ️</span>
+              <p className="text-blue-800 font-medium">الحقول المميزة بـ <span className="text-red-500">*</span> مطلوبة ويجب ملؤها</p>
+            </div>
+            <p className="text-blue-600 text-sm mt-2">
+              الحقول المطلوبة: عنوان القضية، العميل، نوع القضية، المحكمة، المحامي المسؤول، حالة القضية، أولوية القضية
+            </p>
+          </div>
+          <button 
+            type="button"
+            onClick={testClients}
+            className="px-3 py-1 text-xs bg-blue-200 text-blue-800 rounded hover:bg-blue-300"
+          >
+            اختبار العملاء
+          </button>
+        </div>
+      </div>
       
       <form onSubmit={handleSubmit}>
         {/* القسم الأول: معلومات القضية الأساسية */}
         <div className={SECTION_CLASSES}>
           <h2 className={SECTION_TITLE_CLASSES}>المعلومات الأساسية</h2>
           
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* عنوان القضية */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">            {/* عنوان القضية */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="title">عنوان القضية *</label>
+              <label className={getLabelClass('titre')} htmlFor="titre">
+                عنوان القضية <span className="text-red-500">*</span>
+                {showValidation && fieldErrors.titre && <span className="text-xs text-red-500 block">هذا الحقل مطلوب</span>}
+              </label>
               <input 
                 type="text" 
-                id="title" 
-                name="title"
+                id="titre" 
+                name="titre"
                 required
-                value={caseData.title}
+                value={caseData.titre}
                 onChange={handleChange}
                 placeholder="عنوان القضية"
-                className={INPUT_CLASSES}
+                className={getInputClass('titre')}
               />
             </div>
 
             {/* العميل */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="clientId">العميل *</label>
+              <label className={getLabelClass('clientId')} htmlFor="clientId">
+                العميل <span className="text-red-500">*</span>
+                {showValidation && fieldErrors.clientId && <span className="text-xs text-red-500 block">يرجى اختيار عميل</span>}
+              </label>
               <select 
                 id="clientId" 
                 name="clientId"
                 required
                 value={caseData.clientId}
                 onChange={handleChange}
-                className={INPUT_CLASSES}
-              >
-                <option value="">اختر العميل...</option>
+                className={getInputClass('clientId')}
+              >                <option value="">اختر العميل...</option>
                 {clients.map(client => (
-                  <option key={client.id} value={client.id}>{client.name}</option>
+                  <option key={client.id || client.idClient} value={client.id || client.idClient}>
+                    {client.nom || client.name || `${client.prenom || ''} ${client.nom || ''}`.trim()}
+                  </option>
                 ))}
               </select>
-            </div>
-
-            {/* نوع القضية */}
+            </div>            {/* نوع القضية */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="type">نوع القضية *</label>
+              <label className={getLabelClass('type')} htmlFor="type">
+                نوع القضية <span className="text-red-500">*</span>
+                {showValidation && fieldErrors.type && <span className="text-xs text-red-500 block">يرجى اختيار نوع القضية</span>}
+              </label>
               <select 
                 id="type" 
                 name="type"
                 required
                 value={caseData.type}
                 onChange={handleChange}
-                className={INPUT_CLASSES}
+                className={getInputClass('type')}
               >
                 <option value="">اختر نوع القضية...</option>
                 {caseTypes.map(type => (
@@ -225,30 +401,31 @@ const NewCase = () => {
 
             {/* المحكمة */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="court">المحكمة *</label>
+              <label className={getLabelClass('tribunal')} htmlFor="tribunal">
+                المحكمة <span className="text-red-500">*</span>
+                {showValidation && fieldErrors.tribunal && <span className="text-xs text-red-500 block">يرجى اختيار المحكمة</span>}
+              </label>
               <select 
-                id="court" 
-                name="court"
+                id="tribunal" 
+                name="tribunal"
                 required
-                value={caseData.court}
+                value={caseData.tribunal}
                 onChange={handleChange}
-                className={INPUT_CLASSES}
+                className={getInputClass('tribunal')}
               >
                 <option value="">اختر المحكمة...</option>
                 {courts.map(court => (
                   <option key={court.id} value={court.name}>{court.name}</option>
                 ))}
               </select>
-            </div>
-
-            {/* رقم الملف */}
+            </div>            {/* رقم الملف */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="fileNumber">رقم الملف بالمحكمة</label>
+              <label className={LABEL_CLASSES} htmlFor="fichierNumero">رقم الملف بالمحكمة</label>
               <input 
                 type="text" 
-                id="fileNumber" 
-                name="fileNumber"
-                value={caseData.fileNumber}
+                id="fichierNumero" 
+                name="fichierNumero"
+                value={caseData.fichierNumero}
                 onChange={handleChange}
                 placeholder="رقم الملف بالمحكمة (اختياري)"
                 className={INPUT_CLASSES}
@@ -257,12 +434,12 @@ const NewCase = () => {
 
             {/* تاريخ بدء القضية */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="initialDate">تاريخ بدء القضية</label>
+              <label className={LABEL_CLASSES} htmlFor="dateInitiale">تاريخ بدء القضية</label>
               <input 
                 type="date" 
-                id="initialDate" 
-                name="initialDate"
-                value={caseData.initialDate}
+                id="dateInitiale" 
+                name="dateInitiale"
+                value={caseData.dateInitiale}
                 onChange={handleChange}
                 className={INPUT_CLASSES}
               />
@@ -274,32 +451,31 @@ const NewCase = () => {
         <div className={SECTION_CLASSES}>
           <h2 className={SECTION_TITLE_CLASSES}>أطراف القضية</h2>
           
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* المحامي المسؤول */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">            {/* المحامي المسؤول */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="lawyer">المحامي المسؤول *</label>
-              <select 
-                id="lawyer" 
-                name="lawyer"
+              <label className={getLabelClass('avocat')} htmlFor="avocat">
+                المحامي المسؤول <span className="text-red-500">*</span>
+                {showValidation && fieldErrors.avocat && <span className="text-xs text-red-500 block">هذا الحقل مطلوب</span>}
+              </label>
+              <input 
+                type="text" 
+                id="avocat" 
+                name="avocat"
                 required
-                value={caseData.lawyer}
+                value={caseData.avocat}
                 onChange={handleChange}
-                className={INPUT_CLASSES}
-              >
-                <option value="">اختر المحامي...</option>
-                {lawyers.map(lawyer => (
-                  <option key={lawyer.id} value={lawyer.name}>{lawyer.name}</option>
-                ))}
-              </select>
+                placeholder="اسم المحامي المسؤول"
+                className={getInputClass('avocat')}
+              />
             </div>
 
             {/* القاضي */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="judgeId">القاضي</label>
+              <label className={LABEL_CLASSES} htmlFor="jugeId">القاضي</label>
               <select 
-                id="judgeId" 
-                name="judgeId"
-                value={caseData.judgeId}
+                id="jugeId" 
+                name="jugeId"
+                value={caseData.jugeId}
                 onChange={handleChange}
                 className={INPUT_CLASSES}
               >
@@ -308,16 +484,14 @@ const NewCase = () => {
                   <option key={judge.id} value={judge.id}>{judge.name}</option>
                 ))}
               </select>
-            </div>
-
-            {/* الطرف المقابل */}
+            </div>            {/* الطرف المقابل */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="opposingParty">الطرف المقابل</label>
+              <label className={LABEL_CLASSES} htmlFor="partieAdverse">الطرف المقابل</label>
               <input 
                 type="text" 
-                id="opposingParty" 
-                name="opposingParty"
-                value={caseData.opposingParty}
+                id="partieAdverse" 
+                name="partieAdverse"
+                value={caseData.partieAdverse}
                 onChange={handleChange}
                 placeholder="اسم الطرف المقابل"
                 className={INPUT_CLASSES}
@@ -326,12 +500,12 @@ const NewCase = () => {
 
             {/* محامي الطرف المقابل */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="opposingLawyer">محامي الطرف المقابل</label>
+              <label className={LABEL_CLASSES} htmlFor="avocatAdverse">محامي الطرف المقابل</label>
               <input 
                 type="text" 
-                id="opposingLawyer" 
-                name="opposingLawyer"
-                value={caseData.opposingLawyer}
+                id="avocatAdverse" 
+                name="avocatAdverse"
+                value={caseData.avocatAdverse}
                 onChange={handleChange}
                 placeholder="اسم محامي الطرف المقابل"
                 className={INPUT_CLASSES}
@@ -344,17 +518,19 @@ const NewCase = () => {
         <div className={SECTION_CLASSES}>
           <h2 className={SECTION_TITLE_CLASSES}>حالة القضية</h2>
           
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {/* حالة القضية */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">            {/* حالة القضية */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="status">حالة القضية *</label>
+              <label className={getLabelClass('statut')} htmlFor="statut">
+                حالة القضية <span className="text-red-500">*</span>
+                {showValidation && fieldErrors.statut && <span className="text-xs text-red-500 block">يرجى اختيار حالة القضية</span>}
+              </label>
               <select 
-                id="status" 
-                name="status"
+                id="statut" 
+                name="statut"
                 required
-                value={caseData.status}
+                value={caseData.statut}
                 onChange={handleChange}
-                className={INPUT_CLASSES}
+                className={getInputClass('statut')}
               >
                 {statusTypes.map(status => (
                   <option key={status} value={status}>{status}</option>
@@ -364,14 +540,17 @@ const NewCase = () => {
 
             {/* أولوية القضية */}
             <div>
-              <label className={LABEL_CLASSES} htmlFor="priority">أولوية القضية *</label>
+              <label className={getLabelClass('priorite')} htmlFor="priorite">
+                أولوية القضية <span className="text-red-500">*</span>
+                {showValidation && fieldErrors.priorite && <span className="text-xs text-red-500 block">يرجى اختيار أولوية القضية</span>}
+              </label>
               <select 
-                id="priority" 
-                name="priority"
+                id="priorite" 
+                name="priorite"
                 required
-                value={caseData.priority}
+                value={caseData.priorite}
                 onChange={handleChange}
-                className={INPUT_CLASSES}
+                className={getInputClass('priorite')}
               >
                 {priorityTypes.map(priority => (
                   <option key={priority} value={priority}>{priority}</option>
@@ -397,139 +576,30 @@ const NewCase = () => {
               className={INPUT_CLASSES}
             />
           </div>
-        </div>
-
-        {/* القسم الخامس: جلسة القضية الأولى */}
-        <div className={SECTION_CLASSES}>
-          <h2 className={SECTION_TITLE_CLASSES}>الجلسة الأولى</h2>
-          
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* تاريخ الجلسة */}
-            <div>
-              <label className={LABEL_CLASSES} htmlFor="sessionDate">تاريخ الجلسة</label>
-              <input 
-                type="date" 
-                id="sessionDate" 
-                name="sessionDate"
-                value={caseData.sessionDate}
-                onChange={handleChange}
-                className={INPUT_CLASSES}
-              />
-            </div>
-
-            {/* ملاحظات الجلسة */}
-            <div className="md:col-span-2">
-              <label className={LABEL_CLASSES} htmlFor="sessionNotes">ملاحظات الجلسة</label>
-              <textarea 
-                id="sessionNotes" 
-                name="sessionNotes"
-                value={caseData.sessionNotes}
-                onChange={handleChange}
-                placeholder="ملاحظات حول الجلسة الأولى..."
-                rows="3"
-                className={INPUT_CLASSES}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* القسم السادس: مرفقات القضية */}
-        <div className={SECTION_CLASSES}>
-          <h2 className={SECTION_TITLE_CLASSES}>المرفقات</h2>
-          
-          <div className="mb-4">
-            <label className="inline-block px-4 py-2 mb-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-md cursor-pointer hover:bg-blue-700">
-              <input 
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <span className="flex items-center">
-                <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                </svg>
-                إضافة مرفقات
-              </span>
-            </label>
-            <p className="text-xs text-gray-500">الحد الأقصى لحجم الملف: 5 ميجابايت</p>
-          </div>
-
-          {/* عرض المرفقات */}
-          {caseData.attachments.length > 0 && (
-            <ul className="space-y-2">
-              {caseData.attachments.map((file, index) => (
-                <li key={index} className="flex items-center justify-between p-2 border border-gray-200 rounded-md">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 ml-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <span className="text-sm">{file.name}</span>
-                    <span className="ml-2 text-xs text-gray-500">
-                      ({(file.size / 1024).toFixed(1)} كيلوبايت)
-                    </span>
-                  </div>
-                  <button 
-                    type="button" 
-                    className="p-1 text-red-500 transition-colors rounded hover:text-red-700 hover:bg-red-50"
-                    onClick={() => removeAttachment(index)}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* أزرار التحكم */}
+        </div>{/* أزرار التحكم */}
         <div className="flex justify-center mt-6 space-x-4 space-x-reverse">
           <button 
             type="submit" 
-            className="flex items-center justify-center px-6 py-3 font-medium text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-6 py-3 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
           >
             {loading ? (
               <>
-                <svg className="w-5 h-5 ml-1 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <span className="inline-block w-4 h-4 ml-2 border-2 border-white rounded-full animate-spin border-t-transparent"></span>
                 جاري الحفظ...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                حفظ القضية
-              </>
+              </>            ) : (
+              'حفظ القضية'
             )}
           </button>
 
           <button 
-            type="submit" 
-            name="saveAndAddSession"
-            className="flex items-center justify-center px-6 py-3 font-medium text-white transition-colors bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-            disabled={loading}
-          >
-            حفظ وإضافة جلسة
-          </button>
-        </div>
-
-        {/* زر الإلغاء - منفصل عن الأزرار الأخرى */}
-        <div className="flex justify-start mt-4">
-          <button 
             type="button" 
             onClick={handleCancel}
-            className="px-4 py-2 text-gray-700 transition-colors bg-gray-200 rounded-md hover:bg-gray-300"
+            className="px-6 py-3 font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
             disabled={loading}
           >
-            إلغاء
-          </button>
-        </div>
+            ✕ إلغاء
+          </button>        </div>
       </form>
     </div>
   );

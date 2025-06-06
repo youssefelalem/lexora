@@ -46,12 +46,12 @@ public class DossierServiceImpl implements DossierService {
         dto.setReference(dossier.getReference());
         dto.setTitre(dossier.getTitre());
         dto.setDescription(dossier.getDescription());
-        
+
         if (dossier.getClient() != null) {
             dto.setClientId(dossier.getClient().getIdClient());
             dto.setClientNom(dossier.getClient().getNom());
         }
-        
+
         dto.setType(dossier.getType());
         dto.setTribunal(dossier.getTribunal());
         dto.setAvocat(dossier.getAvocat());
@@ -63,18 +63,18 @@ public class DossierServiceImpl implements DossierService {
         dto.setPriorite(dossier.getPriorite());
         dto.setDateInitiale(dossier.getDateInitiale());
         dto.setDateCreation(dossier.getDateCreation());
-        
+
         // Count related entities
         dto.setNombreSessions(dossier.getSessions() != null ? dossier.getSessions().size() : 0);
         dto.setNombreDocuments(dossier.getDocuments() != null ? dossier.getDocuments().size() : 0);
         dto.setNombreFactures(dossier.getFactures() != null ? dossier.getFactures().size() : 0);
-        
+
         if (dossier.getUtilisateurResponsable() != null) {
             dto.setUtilisateurResponsableId(dossier.getUtilisateurResponsable().getIdUtilisateur());
-            dto.setUtilisateurResponsableNom(dossier.getUtilisateurResponsable().getNom() + " " + 
-                                            dossier.getUtilisateurResponsable().getPrenom());
+            dto.setUtilisateurResponsableNom(dossier.getUtilisateurResponsable().getNom() + " " +
+                    dossier.getUtilisateurResponsable().getPrenom());
         }
-        
+
         return dto;
     }
 
@@ -83,51 +83,69 @@ public class DossierServiceImpl implements DossierService {
      */
     private Dossier convertToEntity(DossierDTO dossierDTO) {
         if (dossierDTO == null) {
+            System.err.println("تحذير: DossierDTO فارغ");
             return null;
         }
 
+        System.out.println("تحويل DossierDTO إلى Dossier entity...");
         Dossier dossier = new Dossier();
-        dossier.setIdDossier(dossierDTO.getIdDossier());
-        dossier.setReference(dossierDTO.getReference());
-        dossier.setTitre(dossierDTO.getTitre());
-        dossier.setDescription(dossierDTO.getDescription());
-        dossier.setType(dossierDTO.getType());
-        dossier.setTribunal(dossierDTO.getTribunal());
-        dossier.setAvocat(dossierDTO.getAvocat());
-        dossier.setFichierNumero(dossierDTO.getFichierNumero());
-        dossier.setJugeId(dossierDTO.getJugeId());
-        dossier.setPartieAdverse(dossierDTO.getPartieAdverse());
-        dossier.setAvocatAdverse(dossierDTO.getAvocatAdverse());
-        dossier.setStatut(dossierDTO.getStatut());
-        dossier.setPriorite(dossierDTO.getPriorite());
-        
-        // If it's a new dossier, set the creation date to current date
-        if (dossierDTO.getDateCreation() == null) {
-            dossier.setDateCreation(LocalDate.now());
-        } else {
-            dossier.setDateCreation(dossierDTO.getDateCreation());
-        }
-        
-        // If dateInitiale is not provided, set it to current date
-        if (dossierDTO.getDateInitiale() == null) {
-            dossier.setDateInitiale(LocalDate.now());
-        } else {
-            dossier.setDateInitiale(dossierDTO.getDateInitiale());
-        }
 
-        // Set client if clientId is provided
-        if (dossierDTO.getClientId() != null) {
-            clientRepository.findById(dossierDTO.getClientId())
-                    .ifPresent(dossier::setClient);
-        }
+        try {
+            dossier.setIdDossier(dossierDTO.getIdDossier());
+            dossier.setReference(dossierDTO.getReference());
+            dossier.setTitre(dossierDTO.getTitre());
+            dossier.setDescription(dossierDTO.getDescription());
+            dossier.setType(dossierDTO.getType());
+            dossier.setTribunal(dossierDTO.getTribunal());
+            dossier.setAvocat(dossierDTO.getAvocat());
+            dossier.setFichierNumero(dossierDTO.getFichierNumero());
+            dossier.setJugeId(dossierDTO.getJugeId());
+            dossier.setPartieAdverse(dossierDTO.getPartieAdverse());
+            dossier.setAvocatAdverse(dossierDTO.getAvocatAdverse());
+            dossier.setStatut(dossierDTO.getStatut());
+            dossier.setPriorite(dossierDTO.getPriorite());
 
-        // Set utilisateurResponsable if utilisateurResponsableId is provided
-        if (dossierDTO.getUtilisateurResponsableId() != null) {
-            userRepository.findById(dossierDTO.getUtilisateurResponsableId())
-                    .ifPresent(dossier::setUtilisateurResponsable);
-        }
+            // If it's a new dossier, set the creation date to current date
+            if (dossierDTO.getDateCreation() == null) {
+                dossier.setDateCreation(LocalDate.now());
+            } else {
+                dossier.setDateCreation(dossierDTO.getDateCreation());
+            }
 
-        return dossier;
+            // If dateInitiale is not provided, set it to current date
+            if (dossierDTO.getDateInitiale() == null) {
+                dossier.setDateInitiale(LocalDate.now());
+            } else {
+                dossier.setDateInitiale(dossierDTO.getDateInitiale());
+            }
+
+            // Set client if clientId is provided
+            if (dossierDTO.getClientId() != null) {
+                System.out.println("ربط العميل برقم: " + dossierDTO.getClientId());
+                Optional<Client> clientOptional = clientRepository.findById(dossierDTO.getClientId());
+                if (clientOptional.isPresent()) {
+                    dossier.setClient(clientOptional.get());
+                    System.out.println("تم ربط العميل: " + clientOptional.get().getNom());
+                } else {
+                    System.err.println("العميل غير موجود!");
+                }
+            }
+
+            // Set utilisateurResponsable if utilisateurResponsableId is provided
+            if (dossierDTO.getUtilisateurResponsableId() != null) {
+                System.out.println("ربط المستخدم المسؤول برقم: " + dossierDTO.getUtilisateurResponsableId());
+                userRepository.findById(dossierDTO.getUtilisateurResponsableId())
+                        .ifPresent(dossier::setUtilisateurResponsable);
+            }
+
+            System.out.println("تم تحويل DossierDTO بنجاح");
+            return dossier;
+
+        } catch (Exception e) {
+            System.err.println("خطأ في تحويل DossierDTO: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("فشل في تحويل بيانات القضية: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -148,23 +166,53 @@ public class DossierServiceImpl implements DossierService {
     @Override
     @Transactional
     public DossierDTO saveDossier(DossierDTO dossierDTO) {
-        // Generate a reference if not provided (format: C-YYYY-NNN)
+        System.out.println("بدء عملية حفظ القضية: " + dossierDTO.getTitre());
+        System.out.println("معرف العميل: " + dossierDTO.getClientId());
+
+        // توليد رقم مرجعي إذا لم يكن موجود (تنسيق: C-YYYY-NNN)
         if (dossierDTO.getReference() == null || dossierDTO.getReference().isEmpty()) {
             int year = LocalDate.now().getYear();
-            
-            // Generate a sequential number by counting existing dossiers for this year
+
+            // توليد رقم تسلسلي بعد البيانات الموجودة لهذه السنة
+            String yearPrefix = "C-" + year + "-";
             long count = dossierRepository.findAll().stream()
-                    .filter(d -> d.getReference() != null && d.getReference().startsWith("C-" + year))
+                    .filter(d -> d.getReference() != null && d.getReference().startsWith(yearPrefix))
                     .count() + 1;
-            
-            // Create reference in format C-YYYY-NNN (for example C-2025-001)
-            // C is for Case, YYYY is the current year, NNN is the sequential number
-            dossierDTO.setReference(String.format("C-%d-%03d", year, count));
+
+            // إنشاء المرجع بتنسيق C-YYYY-NNN (مثال C-2025-001)
+            // C للقضية (Case)، YYYY السنة الحالية، NNN الرقم التسلسلي
+            String reference = String.format("C-%d-%03d", year, count);
+            dossierDTO.setReference(reference);
+            System.out.println("تم توليد رقم مرجعي: " + reference);
         }
-        
-        Dossier dossier = convertToEntity(dossierDTO);
-        dossier = dossierRepository.save(dossier);
-        return convertToDTO(dossier);
+
+        // التحقق من وجود العميل
+        if (dossierDTO.getClientId() != null) {
+            System.out.println("البحث عن العميل برقم: " + dossierDTO.getClientId());
+            Optional<Client> clientOptional = clientRepository.findById(dossierDTO.getClientId());
+            if (!clientOptional.isPresent()) {
+                String errorMsg = "العميل غير موجود مع المعرف: " + dossierDTO.getClientId();
+                System.err.println(errorMsg);
+                throw new RuntimeException(errorMsg);
+            }
+            System.out.println("تم العثور على العميل: " + clientOptional.get().getNom());
+        }
+
+        try {
+            System.out.println("تحويل DTO إلى Entity...");
+            Dossier dossier = convertToEntity(dossierDTO);
+
+            System.out.println("حفظ القضية في قاعدة البيانات...");
+            dossier = dossierRepository.save(dossier);
+
+            System.out.println("تم حفظ القضية بنجاح برقم: " + dossier.getIdDossier());
+
+            return convertToDTO(dossier);
+        } catch (Exception e) {
+            System.err.println("خطأ في حفظ القضية: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("فشل في حفظ القضية: " + e.getMessage(), e);
+        }
     }
 
     @Override
