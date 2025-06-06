@@ -154,11 +154,9 @@ const ClientDetails = () => {
         >
           + إضافة عمل جديد
         </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+      </div>      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* القسم الأيسر - الإحصائيات والمحتوى الرئيسي */}
-        <div className="space-y-6 lg:col-span-3">
+        <div className="space-y-6 lg:col-span-2">
           {/* بطاقات الإحصائيات */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">            {/* إجمالي المبالغ المستلمة */}
             <div className="p-6 bg-white border-r-4 border-red-400 rounded-lg shadow-sm">
