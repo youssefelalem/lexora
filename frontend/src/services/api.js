@@ -439,6 +439,36 @@ const clientStatisticsService = {
   getClientFinancialSummary: (clientId) => api.get(`/clients/${clientId}/financial-summary`)
 };
 
+// خدمات القضايا (تستخدم نفس endpoints الملفات/Dossiers)
+const caseService = {
+  // الحصول على جميع القضايا
+  getAllCases: () => api.get('/dossiers'),
+  
+  // الحصول على قضية محددة
+  getCaseById: (id) => api.get(`/dossiers/${id}`),
+  
+  // إنشاء قضية جديدة
+  createCase: (caseData) => api.post('/dossiers', caseData),
+  
+  // تحديث قضية
+  updateCase: (id, caseData) => api.put(`/dossiers/${id}`, caseData),
+  
+  // حذف قضية
+  deleteCase: (id) => api.delete(`/dossiers/${id}`),
+  
+  // الحصول على القضايا حسب العميل
+  getCasesByClientId: (clientId) => api.get(`/dossiers/client/${clientId}`),
+  
+  // الحصول على القضايا حسب الحالة
+  getCasesByStatus: (status) => api.get(`/dossiers/statut/${status}`),
+  
+  // الحصول على القضايا حسب النوع
+  getCasesByType: (type) => api.get(`/dossiers/type/${type}`),
+  
+  // الحصول على القضايا حسب الأولوية
+  getCasesByPriority: (priority) => api.get(`/dossiers/priorite/${priority}`)
+};
+
 // خدمات قضايا العملاء
 const clientCasesService = {
   // الحصول على جميع قضايا عميل محدد
@@ -483,6 +513,7 @@ export {
   userService,
   clientService,
   clientTypeService,
+  caseService,
   dossierService,
   documentService,
   depenseService,
