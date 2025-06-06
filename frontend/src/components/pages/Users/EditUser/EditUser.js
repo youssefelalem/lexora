@@ -142,14 +142,12 @@ const EditUser = () => {
   // ترجمة الأدوار
   const translateRole = (role) => {
     const roles = {
-      'ADMINISTRATEUR': 'مدير النظام',
       'AVOCAT': 'محامي',
       'ASSISTANT_JURIDIQUE': 'مساعد قانوني'
     };
     return roles[role] || role;
   };  // الأدوار المتاحة في النظام
   const availableRoles = [
-    { value: 'ADMINISTRATEUR', label: 'مدير النظام' },
     { value: 'AVOCAT', label: 'محامي' },
     { value: 'ASSISTANT_JURIDIQUE', label: 'مساعد قانوني' }
   ];
