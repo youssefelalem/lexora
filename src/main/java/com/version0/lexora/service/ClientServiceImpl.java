@@ -13,7 +13,6 @@ import com.version0.lexora.repository.DossierRepository;
 import com.version0.lexora.repository.FactureRepository;
 import com.version0.lexora.repository.PaiementRepository;
 import com.version0.lexora.repository.DepenseRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +27,6 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ClientServiceImpl implements ClientService {
-
     private final ClientRepository clientRepository;
     private final DossierRepository dossierRepository;
     private final FactureRepository factureRepository;
@@ -36,7 +34,6 @@ public class ClientServiceImpl implements ClientService {
     private final DepenseRepository depenseRepository;
     private final ClientTypeService clientTypeService;
 
-    @Autowired
     public ClientServiceImpl(ClientRepository clientRepository,
             DossierRepository dossierRepository,
             FactureRepository factureRepository,
