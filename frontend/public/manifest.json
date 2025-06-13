@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Lexora",
+  "name": "Lexora - نظام إدارة مكتب المحاماة",
   "icons": [
     {
       "src": "favicon.ico",
